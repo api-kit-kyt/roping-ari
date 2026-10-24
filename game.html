@@ -8,11 +8,11 @@
 <style>body{margin:0}[hidden]{display:none!important}</style>
 <title>Roping Ari, the Game</title>
 <style>
-  :root { --ground: #F1EDF4; --panel: #FBF9FC; --ink: #2B2335; --muted: #6B6078; --line: #D9D0E2; --violet: #6F5B93; --rust: #B4472A; --copper: #A8672E; --cream: #F6ECDB; --amber: #C9822B;
+  :root { --ground: #F1EDF4; --panel: #FBF9FC; --ink: #2B2335; --muted: #6B6078; --line: #D9D0E2; --violet: #6F5B93; --rust: #B4472A; --copper: #A8672E; --blush: #E3A092; --cream: #F6ECDB; --amber: #C9822B;
           --sky1: #CFC2E4; --sky2: #F7D6BD; --city: #C3B5D6; --road: #D2C8DB; --bus: #DDB84E; --glass: #5D5470; --pole: #2B2335; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ground: #17131D; --panel: #201A29; --ink: #ECE6F2; --muted: #A598B5; --line: #372E44; --violet: #A995D1; --rust: #E5825C; --copper: #D9975A; --cream: #EADCC4; --amber: #E0A04A;
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ground: #17131D; --panel: #201A29; --ink: #ECE6F2; --muted: #A598B5; --line: #372E44; --violet: #A995D1; --rust: #E5825C; --copper: #D9975A; --blush: #EDB2A4; --cream: #EADCC4; --amber: #E0A04A;
           --sky1: #231B36; --sky2: #6A3B3C; --city: #2A2139; --road: #110E16; --bus: #A98B3B; --glass: #15111B; --pole: #0B090E; } }
-  :root[data-theme="dark"] { --ground: #17131D; --panel: #201A29; --ink: #ECE6F2; --muted: #A598B5; --line: #372E44; --violet: #A995D1; --rust: #E5825C; --copper: #D9975A; --cream: #EADCC4; --amber: #E0A04A;
+  :root[data-theme="dark"] { --ground: #17131D; --panel: #201A29; --ink: #ECE6F2; --muted: #A598B5; --line: #372E44; --violet: #A995D1; --rust: #E5825C; --copper: #D9975A; --blush: #EDB2A4; --cream: #EADCC4; --amber: #E0A04A;
           --sky1: #231B36; --sky2: #6A3B3C; --city: #2A2139; --road: #110E16; --bus: #A98B3B; --glass: #15111B; --pole: #0B090E; }
   body { background: var(--ground); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
   .page { max-width: 1120px; margin-inline: auto; padding-inline: 16px; padding-block: 20px 40px; display: grid; gap: 14px; }
@@ -43,6 +43,7 @@
   .moments button.on { background: var(--rust); border-color: var(--rust); color: var(--panel); } .moments button.on span { color: var(--panel); } .moments button.passed { border-color: var(--violet); }
   #momentCard { position: absolute; inset: 12px 12px auto auto; max-width: 440px; background: var(--panel); border: 1px solid var(--rust); border-radius: 6px; padding: 8px 12px; font-size: 14px; }
   .demolinks { display: flex; flex-wrap: wrap; gap: 6px 10px; font-size: 14px; } .demolinks a { color: var(--violet); } .demolinks a.open { color: var(--muted); text-decoration-style: dotted; }
+  #lede a { color: var(--violet); }
   kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 1px 6px; background: var(--ground); white-space: nowrap; }
 </style>
 <div class="page">
@@ -51,6 +52,7 @@
     <p id="lede">First playable. She rides the two trolleybus wires at 79 km/h on her poles; a trolleybus ahead is on the same wires. Get over it and back onto the wires in front of it. Click the picture first so it gets the keys; press A to watch it done once, hoop and all.</p>
   </header>
   <div class="stage"><canvas id="cv" tabindex="0"></canvas><div id="result" hidden><h2 id="resultTitle"></h2><p id="resultText"></p></div><div id="momentCard" hidden></div></div>
+  <section class="card" id="modelBox" hidden><div class="padhead"><strong>Ari</strong> <span>which model draws her: the recipe at 16, 60 or 300 polygons, or a skin (a mesh generated from her pictures) on the 300, at 300 or 2000 faces</span></div><div class="moments" id="models"></div></section>
   <section class="card" id="demoBox" hidden><label class="check"><input type="checkbox" id="stopAt"> Stop at key moments</label><div class="moments" id="moments"></div></section>
   <section class="card" id="soundBox"><div class="padhead"><strong>Sound</strong> <span>the trolleybus as it is: a traction-motor hum at its speed and a chopper singing one note; her tips an induction motor's hum an octave up and far quieter, rising with a push and falling with a brake, an inverter's faint whine over it, the jaws clicking when they close. Pick one, then click the picture.</span></div>
     <div class="soundctl"><label>Sound <select id="soundVariant"><option value="off">off</option><option value="synth">synthesised (ZiU motor + Ganz chopper, from their numbers)</option><option value="laz">recordings (local build only)</option></select></label> <span id="soundStatus" style="font: 12px ui-monospace, monospace; color: var(--muted)">off</span></div></section>
@@ -84,7 +86,7 @@
   </section>
 </div>
 <script>
-const DATA = {"physics":{"sim":{"g":9.81,"dt":0.0001},"body":{"mass":4.0,"poles_mass":3.0,"length":0.8},"poles":{"long":2.4,"short":1.0,"count":2,"diameter":0.015,"cd":1.1},"street":{"wire_height":5.8,"span":35.0},"bus":{"speed":3.0,"length":12.0,"shoe_overhang":1.0,"roof_height":3.4},"air":{"density":1.2,"headwind":0.0},"gaits":{"wing":{"area":0.25,"span":0.35,"cd0":0.05,"alpha_max_deg":35},"narrow_cda":0.01,"speeds":{"min":2.0,"max":32.0,"step":0.5},"lead_limit_deg":70,"lead_targets_deg":[70,60,45,30]},"flare_k":0.2,"tips":{"coil":{"thrust":40.0,"fade_speed":3.0},"grip":450.0,"shoe_mu":0.2,"hang_limit":1000.0,"sign_smooth":0.05,"mass":3.0}},"constants_sha256":"28013205efda6ee86e57087bbc68b6a31811a73a1a6c089ba5faf56f62b80d8e","levels":[{"name":"base","title":"Base","tuning":{"step":0.001,"blendFromDeg":35,"blendToDeg":70,"hang_limit":1000,"body_load_limit_g":14,"reach_speed":14.0,"catch_absorb":8.0,"reach_past":0.03,"spin_damping_spread":0.4,"arc_seconds":3.0,"hoop_hold":0.12,"hoop_time":0.2,"hoop_cda":0.02,"hoop_auto_open":1,"hoop_look_ahead":0.9},"input":{"throttle_ramp":0.25,"throttle_full":10.0,"pitch_rate_deg":90,"pole_speed":6.0,"slow_motion":0.4,"time_scale":0.5,"time_scales":[0.15,0.25,0.35,0.5,0.75,1.0]},"start":{"gait":"pulled","speed":22.0},"bus":{"speed":3.0,"count":1,"first_gap":60.0},"tips":{},"wind":0.0,"assists":{"balance":true,"sway":false,"slow_motion":true},"balance":{"kp":2.2,"kd":1.1,"lead_deg":65,"lead_min_deg":50,"lead_max_deg":72,"lead_rate_deg":15,"engage_deg":35,"pitch_min_deg":2},"cross_span":{"height":0.55,"radius":0.05,"pretension":8000,"length":25,"ea":3000000.0,"breaking":40000,"restitution":0.15,"spark":0.15},"ghost":null}],"ghosts":{},"demos":{"spun_down":{"title":"Spun down","kind":"badge","what":"the hoop, then opened, then a soft catch","group":null,"start":"pulled","params":{"release":58,"commit":2},"closes":true,"numbers":{"order":"CURL \u2192 OPEN \u2192 CATCH.soft"},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.974,"name":"REL","kind":"hand","speed":80,"angle":58,"l":1,"note":"let go","x":64.7,"y":-0.52},{"t":3.193,"name":"CURL","spin":2.1,"note":"curled into the hoop","x":69.25,"y":0.88},{"t":3.369,"name":"TURN","n":1,"note":"1 full turn","x":72.89,"y":1.65},{"t":3.592,"name":"TURN","n":2,"note":"2 full turns","x":77.45,"y":2.18},{"t":3.725,"name":"APEX","height":2.27,"speed":73,"note":"the top of the flight","x":80.16,"y":2.27},{"t":3.816,"name":"TURN","n":3,"note":"3 full turns","x":82,"y":2.22},{"t":3.959,"name":"REACH","height":2,"note":"reached for the wire","x":84.89,"y":2},{"t":3.959,"name":"OVER","height":4.4,"note":"over the windscreen, in the air","x":84.89,"y":2},{"t":4.039,"name":"TURN","n":4,"note":"4 full turns","x":86.5,"y":1.78},{"t":4.135,"name":"OPEN","note":"opened out of the hoop","x":88.43,"y":1.44},{"t":4.404,"name":"CATCH","kind":"soft","speed":71,"l":2.3,"angle":-90,"note":"caught the wire","x":93.77,"y":0.02},{"t":4.405,"name":"PASS","speed":71,"note":"past the trolleybus, on the wire","x":93.79,"y":0.01}]},"held_it":{"title":"Held it","kind":"badge","what":"a hard catch (over the absorption limit) survived under the body-load limit","group":null,"start":"pulled","params":{"release":58,"commit":3},"closes":true,"numbers":{},"note":"the body-load limit is impossibly high for now (base.yaml), so any hard catch survives","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.974,"name":"REL","kind":"hand","speed":80,"angle":58,"l":1,"note":"let go","x":64.7,"y":-0.52},{"t":3.717,"name":"APEX","height":2.25,"speed":70,"note":"the top of the flight","x":79.84,"y":2.25},{"t":3.718,"name":"REACH","height":2.25,"note":"reached for the wire","x":79.86,"y":2.25},{"t":3.984,"name":"OVER","height":4.3,"note":"over the windscreen, in the air","x":84.96,"y":1.9},{"t":4.581,"name":"CATCH","kind":"hard","speed":65,"l":1.45,"angle":-20,"note":"a hard catch","x":96.14,"y":-1.36},{"t":4.582,"name":"PASS","speed":65,"note":"past the trolleybus, on the wire","x":96.16,"y":-1.36},{"t":7.756,"name":"BACK","speed":81,"note":"swung back behind her tips","x":166.3,"y":-2.39},{"t":10.383,"name":"BACK","speed":81,"note":"swung back behind her tips","x":225.27,"y":-2.39}]},"through_the_arc":{"title":"Through the arc","kind":"badge","what":"arced between the wires, stayed on, and still passed the bus","group":null,"start":"pulled","params":{"release":58,"commit":1.6},"closes":true,"numbers":{"arc":true},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.974,"name":"REL","kind":"hand","speed":80,"angle":58,"l":1,"note":"let go","x":64.7,"y":-0.52},{"t":3.026,"name":"SPREAD","pitch":25,"note":"spread as a wing","x":65.77,"y":-0.13},{"t":3.045,"name":"ARC","seconds":3,"note":"an arc between her and the wire","x":66.16,"y":0},{"t":3.096,"name":"NARROW","note":"narrow","x":67.2,"y":0.36},{"t":3.264,"name":"CURL","spin":1.8,"note":"curled into the hoop","x":70.61,"y":1.34},{"t":3.459,"name":"TURN","n":1,"note":"1 full turn","x":74.54,"y":2.12},{"t":3.726,"name":"TURN","n":2,"note":"2 full turns","x":79.87,"y":2.58},{"t":3.769,"name":"APEX","height":2.59,"speed":71,"note":"the top of the flight","x":80.72,"y":2.59},{"t":3.983,"name":"OVER","height":4.76,"note":"over the windscreen, in the air","x":84.95,"y":2.36},{"t":3.993,"name":"TURN","n":3,"note":"3 full turns","x":85.15,"y":2.34},{"t":4.219,"name":"REACH","height":1.6,"note":"reached for the wire","x":89.58,"y":1.6},{"t":4.26,"name":"TURN","n":4,"note":"4 full turns","x":90.38,"y":1.41},{"t":4.419,"name":"OPEN","note":"opened out of the hoop","x":93.47,"y":0.52},{"t":4.607,"name":"CATCH","kind":"hard","speed":69,"l":1.27,"angle":-49,"note":"a hard catch","x":97.11,"y":-0.83},{"t":4.608,"name":"PASS","speed":69,"note":"past the trolleybus, on the wire","x":97.12,"y":-0.84},{"t":5.381,"name":"BACK","speed":82,"note":"swung back behind her tips","x":113.36,"y":-2.39},{"t":8.213,"name":"BACK","speed":83,"note":"swung back behind her tips","x":178.34,"y":-2.39},{"t":10.883,"name":"BACK","speed":83,"note":"swung back behind her tips","x":239.61,"y":-2.39}]},"short_pole_flight":{"title":"Short-pole flight","kind":"badge","what":"the lifted gait held for 2 s at the shortest pole length (free practice, no trolleybus: the bus ended the 1.5 s run of 2026-09-23, not the gait)","group":null,"start":"lifted","params":{"speed":26,"settle":1.5},"closes":true,"numbers":{"held_s":2.48},"note":"","ended":"time up","tokens":[{"t":0.051,"name":"SPREAD","pitch":25,"note":"spread as a wing","x":3.3,"y":-1.01},{"t":0.201,"name":"LIFTED","phase":"enter","speed":80,"lead":65,"lift":143,"note":"flying ahead of her tips","x":6.6,"y":-1.02},{"t":1.607,"name":"PULL","from":2.39,"to":1.77,"note":"pulled the poles in","x":37.47,"y":-0.78},{"t":4.442,"name":"ARC","seconds":3,"note":"an arc between her and the wire","x":91.77,"y":0},{"t":4.443,"name":"LIFTED","phase":"hold","seconds":4.44,"note":"held the lifted gait","x":91.78,"y":0},{"t":4.492,"name":"NARROW","note":"narrow","x":92.64,"y":0.04},{"t":5.097,"name":"BACK","speed":80,"note":"swung back behind her tips","x":103.47,"y":-1.01},{"t":7.171,"name":"BACK","speed":97,"note":"swung back behind her tips","x":148.44,"y":-1.01},{"t":9.209,"name":"BACK","speed":98,"note":"swung back behind her tips","x":201.36,"y":-1.01},{"t":11.251,"name":"BACK","speed":94,"note":"swung back behind her tips","x":255.27,"y":-1.01},{"t":13.046,"name":"BACK","speed":98,"note":"swung back behind her tips","x":302.63,"y":-1.01}]},"hoop_over_roof":{"title":"Hoop over the roof","kind":"badge","what":"curled into the hoop with her head above the trolleybus","group":null,"start":"pulled","params":{"release":58,"commit":1.6},"closes":true,"numbers":{"at_s":3.27},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.974,"name":"REL","kind":"hand","speed":80,"angle":58,"l":1,"note":"let go","x":64.7,"y":-0.52},{"t":3.193,"name":"CURL","spin":2.1,"note":"curled into the hoop","x":69.25,"y":0.88},{"t":3.369,"name":"TURN","n":1,"note":"1 full turn","x":72.89,"y":1.65},{"t":3.592,"name":"TURN","n":2,"note":"2 full turns","x":77.45,"y":2.18},{"t":3.725,"name":"APEX","height":2.27,"speed":73,"note":"the top of the flight","x":80.16,"y":2.27},{"t":3.816,"name":"TURN","n":3,"note":"3 full turns","x":82,"y":2.22},{"t":3.959,"name":"OVER","height":4.4,"note":"over the windscreen, in the air","x":84.89,"y":2},{"t":4.039,"name":"TURN","n":4,"note":"4 full turns","x":86.5,"y":1.78},{"t":4.095,"name":"REACH","height":1.59,"note":"reached for the wire","x":87.63,"y":1.59},{"t":4.262,"name":"TURN","n":5,"note":"5 full turns","x":90.96,"y":0.85},{"t":4.411,"name":"OPEN","note":"opened out of the hoop","x":93.93,"y":-0.03},{"t":4.502,"name":"CATCH","kind":"hard","speed":71,"l":1.02,"angle":-48,"note":"a hard catch","x":95.73,"y":-0.68},{"t":4.503,"name":"PASS","speed":71,"note":"past the trolleybus, on the wire","x":95.75,"y":-0.69},{"t":7.744,"name":"BACK","speed":83,"note":"swung back behind her tips","x":169.03,"y":-2.39}]},"kiss":{"title":"Kiss","kind":"badge","what":"a catch with under 0.5 m/s of speed along the poles to absorb","group":null,"start":"pulled","params":{"release":45,"commit":1.4,"polesOut":false},"closes":true,"numbers":{"along_mps":0.24},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.948,"name":"REL","kind":"hand","speed":85,"angle":45,"l":1,"note":"let go","x":64.13,"y":-0.7},{"t":3.581,"name":"APEX","height":1.28,"speed":79,"note":"the top of the flight","x":78.3,"y":1.28},{"t":3.582,"name":"REACH","height":1.28,"note":"reached for the wire","x":78.32,"y":1.28},{"t":3.766,"name":"TURN","n":1,"note":"1 full turn","x":82.32,"y":1.12},{"t":3.874,"name":"OVER","height":3.26,"note":"over the windscreen, in the air","x":84.63,"y":0.86},{"t":4.07,"name":"CATCH","kind":"soft","speed":76,"l":2.28,"angle":93,"note":"caught the wire","x":88.81,"y":0.12},{"t":4.162,"name":"PASS","speed":77,"note":"past the trolleybus, on the wire","x":90.86,"y":-0.34},{"t":4.603,"name":"BACK","speed":83,"note":"swung back behind her tips","x":98.37,"y":-2.39},{"t":7.702,"name":"BACK","speed":83,"note":"swung back behind her tips","x":164.39,"y":-2.39},{"t":10.485,"name":"BACK","speed":83,"note":"swung back behind her tips","x":226.4,"y":-2.39},{"t":13.331,"name":"BACK","speed":83,"note":"swung back behind her tips","x":291.65,"y":-2.39}]},"swoop":{"title":"Swoop","kind":"line","what":"REL \u2192 SPREAD \u2192 CATCH \u2192 LIFTED before the swing back (soft or hard catch: that is Kiss / Held it)","group":null,"start":"pulled","params":{"release":52,"pitch":16,"commit":1.8,"entry":"coast","wingAt":30,"polesOut":true},"closes":true,"numbers":{"got":"REL \u2192 SPREAD \u2192 CATCH.hard \u2192 LIFTED","lifted_after_catch_s":0.56,"held_s":2.82},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.962,"name":"REL","kind":"hand","speed":82,"angle":52,"l":1,"note":"let go","x":64.44,"y":-0.6},{"t":3.159,"name":"SPREAD","pitch":20,"note":"spread as a wing","x":68.71,"y":0.59},{"t":3.963,"name":"OVER","height":5.29,"note":"over the windscreen, in the air","x":84.9,"y":2.89},{"t":4.019,"name":"APEX","height":2.9,"speed":69,"note":"the top of the flight","x":85.98,"y":2.9},{"t":4.61,"name":"REACH","height":1.79,"note":"reached for the wire","x":97.02,"y":1.79},{"t":4.66,"name":"NARROW","note":"narrow","x":97.93,"y":1.6},{"t":5.119,"name":"CATCH","kind":"hard","speed":61,"l":1.59,"angle":-36,"note":"a hard catch","x":106.01,"y":-1.28},{"t":5.12,"name":"PASS","speed":61,"note":"past the trolleybus, on the wire","x":106.03,"y":-1.29},{"t":5.499,"name":"SPREAD","pitch":35,"note":"spread as a wing","x":114.32,"y":-1.49},{"t":5.678,"name":"LIFTED","phase":"enter","speed":58,"lead":53,"lift":138,"note":"flying ahead of her tips","x":117.94,"y":-1.44},{"t":8.3,"name":"ARC","seconds":3,"note":"an arc between her and the wire","x":160.46,"y":0},{"t":8.301,"name":"LIFTED","phase":"hold","seconds":2.82,"note":"held the lifted gait","x":160.47,"y":0},{"t":8.351,"name":"NARROW","note":"narrow","x":161.27,"y":0.02},{"t":9.266,"name":"BACK","speed":58,"note":"swung back behind her tips","x":173.53,"y":-2.39},{"t":12.681,"name":"BACK","speed":46,"note":"swung back behind her tips","x":219.59,"y":-2.39}]},"swoop_under":{"title":"Swoop below the wire","kind":"line","what":"REL \u2192 SPREAD \u2192 CATCH \u2192 LIFTED with her head never above the wires: a wing hop in the space under them, no trolleybus in the way (free practice)","group":null,"start":"pulled","params":{"release":24,"hard":false,"pitch":8,"commit":-0.3,"entry":"brake","wingAt":30,"polesOut":false},"closes":false,"numbers":{"got":"REL \u2192 SPREAD","apex_m":-1.88},"note":"","ended":"She hit the road.","tokens":[{"t":1.276,"name":"REL","kind":"hand","speed":72,"angle":24,"l":2.4,"note":"let go","x":26.91,"y":-2.19},{"t":1.328,"name":"SPREAD","pitch":20,"note":"spread as a wing","x":27.94,"y":-2.09},{"t":1.556,"name":"APEX","height":-1.88,"speed":68,"note":"the top of the flight","x":32.32,"y":-1.88},{"t":1.557,"name":"REACH","height":-1.88,"note":"reached for the wire","x":32.34,"y":-1.88},{"t":1.608,"name":"NARROW","note":"narrow","x":33.3,"y":-1.9}]},"rolled_up":{"title":"Rolled up","kind":"line","what":"REL \u2192 CURL \u2192 OPEN \u2192 SPREAD \u2192 CATCH in one flight","group":null,"start":"pulled","params":{"release":58,"openAt":0.4,"pitch":12,"commit":1.4},"closes":true,"numbers":{"got":"REL \u2192 CURL \u2192 OPEN \u2192 SPREAD \u2192 CATCH.soft"},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.974,"name":"REL","kind":"hand","speed":80,"angle":58,"l":1,"note":"let go","x":64.7,"y":-0.52},{"t":3.193,"name":"CURL","spin":2.1,"note":"curled into the hoop","x":69.25,"y":0.88},{"t":3.369,"name":"TURN","n":1,"note":"1 full turn","x":72.89,"y":1.65},{"t":3.474,"name":"OPEN","note":"opened out of the hoop","x":75.04,"y":1.96},{"t":3.615,"name":"SPREAD","pitch":12,"note":"spread as a wing","x":77.91,"y":2.21},{"t":3.783,"name":"APEX","height":2.31,"speed":72,"note":"the top of the flight","x":81.31,"y":2.31},{"t":3.964,"name":"OVER","height":4.59,"note":"over the windscreen, in the air","x":84.9,"y":2.19},{"t":4.287,"name":"REACH","height":1.4,"note":"reached for the wire","x":91.19,"y":1.4},{"t":4.337,"name":"NARROW","note":"narrow","x":92.16,"y":1.2},{"t":4.656,"name":"TURN","n":2,"note":"2 full turns","x":98.25,"y":-0.59},{"t":4.694,"name":"CATCH","kind":"soft","speed":68,"l":1.76,"angle":60,"note":"caught the wire","x":98.97,"y":-0.87},{"t":4.695,"name":"PASS","speed":68,"note":"past the trolleybus, on the wire","x":99,"y":-0.88},{"t":4.745,"name":"SPREAD","pitch":35,"note":"spread as a wing","x":100.03,"y":-1.29},{"t":5.112,"name":"BACK","speed":78,"note":"swung back behind her tips","x":105.83,"y":-2.39},{"t":5.736,"name":"ARC","seconds":3,"note":"an arc between her and the wire","x":115.88,"y":0},{"t":5.786,"name":"NARROW","note":"narrow","x":116.82,"y":0.18},{"t":8.512,"name":"BACK","speed":83,"note":"swung back behind her tips","x":177.12,"y":-2.39},{"t":11.434,"name":"BACK","speed":83,"note":"swung back behind her tips","x":242.11,"y":-2.39}]},"one_breath":{"title":"One breath","kind":"line","what":"PULL \u2192 REL \u2192 CATCH \u2192 PASS in under 3 s","group":null,"start":"pulled","params":{"release":58,"gap":16.5},"closes":true,"numbers":{"breath_s":1.65},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.974,"name":"REL","kind":"hand","speed":80,"angle":58,"l":1,"note":"let go","x":64.7,"y":-0.52},{"t":3.717,"name":"APEX","height":2.25,"speed":70,"note":"the top of the flight","x":79.84,"y":2.25},{"t":3.984,"name":"OVER","height":4.3,"note":"over the windscreen, in the air","x":84.96,"y":1.9},{"t":4.134,"name":"REACH","height":1.4,"note":"reached for the wire","x":87.81,"y":1.4},{"t":4.581,"name":"CATCH","kind":"hard","speed":65,"l":1.45,"angle":-20,"note":"a hard catch","x":96.14,"y":-1.36},{"t":4.582,"name":"PASS","speed":65,"note":"past the trolleybus, on the wire","x":96.16,"y":-1.36},{"t":7.757,"name":"BACK","speed":81,"note":"swung back behind her tips","x":166.27,"y":-2.39},{"t":10.402,"name":"BACK","speed":81,"note":"swung back behind her tips","x":225.58,"y":-2.39}]},"full_repertoire":{"title":"Full repertoire","kind":"line","what":"REL, CURL, OPEN, SPREAD, CATCH and LIFTED, in any order, within 6 s","group":null,"start":"pulled","params":{"release":58,"openAt":0.6,"pitch":12,"commit":1.4,"entry":"brake","wingAt":30,"polesOut":true},"closes":true,"numbers":{"got":"REL CURL OPEN SPREAD CATCH LIFTED","span_s":3.52,"held_s":0.93},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.974,"name":"REL","kind":"hand","speed":80,"angle":58,"l":1,"note":"let go","x":64.7,"y":-0.52},{"t":3.193,"name":"CURL","spin":2.1,"note":"curled into the hoop","x":69.25,"y":0.88},{"t":3.369,"name":"TURN","n":1,"note":"1 full turn","x":72.89,"y":1.65},{"t":3.592,"name":"TURN","n":2,"note":"2 full turns","x":77.45,"y":2.18},{"t":3.674,"name":"OPEN","note":"opened out of the hoop","x":79.12,"y":2.25},{"t":3.725,"name":"APEX","height":2.27,"speed":73,"note":"the top of the flight","x":80.16,"y":2.27},{"t":3.815,"name":"SPREAD","pitch":12,"note":"spread as a wing","x":81.98,"y":2.23},{"t":3.96,"name":"OVER","height":4.44,"note":"over the windscreen, in the air","x":84.88,"y":2.04},{"t":4.205,"name":"REACH","height":1.39,"note":"reached for the wire","x":89.75,"y":1.39},{"t":4.255,"name":"NARROW","note":"narrow","x":90.73,"y":1.21},{"t":4.705,"name":"CATCH","kind":"hard","speed":66,"l":1.51,"angle":7,"note":"a hard catch","x":99.24,"y":-1.5},{"t":4.706,"name":"PASS","speed":66,"note":"past the trolleybus, on the wire","x":99.26,"y":-1.5},{"t":4.864,"name":"BACK","speed":66,"note":"swung back behind her tips","x":101.96,"y":-1.51},{"t":6.318,"name":"SPREAD","pitch":35,"note":"spread as a wing","x":128.18,"y":-1.42},{"t":6.496,"name":"LIFTED","phase":"enter","speed":43,"lead":55,"lift":85,"note":"flying ahead of her tips","x":131.21,"y":-1.38},{"t":7.228,"name":"LIFTED","phase":"hold","seconds":0.93,"note":"held the lifted gait","x":140.32,"y":-0.86},{"t":8.115,"name":"BACK","speed":43,"note":"swung back behind her tips","x":148.78,"y":-2.39},{"t":10.76,"name":"LIFTED","phase":"enter","speed":42,"lead":40,"lift":63,"note":"flying ahead of her tips","x":181.42,"y":-1.83},{"t":10.814,"name":"LIFTED","phase":"hold","seconds":0.25,"note":"held the lifted gait","x":182.06,"y":-1.83},{"t":11.602,"name":"BACK","speed":42,"note":"swung back behind her tips","x":189.75,"y":-2.39}]}}};
+const DATA = {"physics":{"sim":{"g":9.81,"dt":0.0001},"body":{"mass":4.0,"poles_mass":3.0,"length":0.8},"poles":{"long":2.4,"short":1.0,"count":2,"diameter":0.015,"cd":1.1},"street":{"wire_height":5.8,"span":35.0},"bus":{"speed":3.0,"length":12.0,"shoe_overhang":1.0,"roof_height":3.4},"air":{"density":1.2,"headwind":0.0},"gaits":{"wing":{"area":0.25,"span":0.35,"cd0":0.05,"alpha_max_deg":35},"narrow_cda":0.01,"speeds":{"min":2.0,"max":32.0,"step":0.5},"lead_limit_deg":70,"lead_targets_deg":[70,60,45,30]},"flare_k":0.2,"tips":{"coil":{"thrust":40.0,"fade_speed":3.0},"grip":450.0,"shoe_mu":0.2,"hang_limit":1000.0,"sign_smooth":0.05,"mass":3.0}},"constants_sha256":"28013205efda6ee86e57087bbc68b6a31811a73a1a6c089ba5faf56f62b80d8e","levels":[{"name":"base","title":"Base","tuning":{"step":0.001,"blendFromDeg":35,"blendToDeg":70,"hang_limit":1000,"body_load_limit_g":14,"reach_speed":14.0,"catch_absorb":8.0,"reach_past":0.03,"spin_damping_spread":0.4,"arc_seconds":3.0,"hoop_hold":0.12,"hoop_time":0.2,"hoop_cda":0.02,"hoop_auto_open":1,"hoop_look_ahead":0.9},"input":{"throttle_ramp":0.25,"throttle_full":10.0,"pitch_rate_deg":90,"pole_speed":6.0,"slow_motion":0.4,"time_scale":0.5,"time_scales":[0.15,0.25,0.35,0.5,0.75,1.0]},"start":{"gait":"pulled","speed":22.0},"bus":{"speed":3.0,"count":1,"first_gap":60.0},"tips":{},"wind":0.0,"assists":{"balance":true,"sway":false,"slow_motion":true},"balance":{"kp":2.2,"kd":1.1,"lead_deg":65,"lead_min_deg":50,"lead_max_deg":72,"lead_rate_deg":15,"engage_deg":35,"pitch_min_deg":2},"cross_span":{"height":0.55,"radius":0.05,"pretension":8000,"length":25,"ea":3000000.0,"breaking":40000,"restitution":0.15,"spark":0.15},"ghost":null}],"ghosts":{},"demos":{"spun_down":{"title":"Spun down","kind":"badge","what":"the hoop, then opened, then a soft catch","group":null,"start":"pulled","params":{"release":58,"commit":2},"closes":true,"numbers":{"order":"CURL \u2192 OPEN \u2192 CATCH.soft"},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.974,"name":"REL","kind":"hand","speed":80,"angle":58,"l":1,"note":"let go","x":64.7,"y":-0.52},{"t":3.193,"name":"CURL","spin":2.1,"note":"curled into the hoop","x":69.25,"y":0.88},{"t":3.369,"name":"TURN","n":1,"note":"1 full turn","x":72.89,"y":1.65},{"t":3.592,"name":"TURN","n":2,"note":"2 full turns","x":77.45,"y":2.18},{"t":3.725,"name":"APEX","height":2.27,"speed":73,"note":"the top of the flight","x":80.16,"y":2.27},{"t":3.816,"name":"TURN","n":3,"note":"3 full turns","x":82,"y":2.22},{"t":3.959,"name":"REACH","height":2,"note":"reached for the wire","x":84.89,"y":2},{"t":3.959,"name":"OVER","height":4.4,"note":"over the windscreen, in the air","x":84.89,"y":2},{"t":4.039,"name":"TURN","n":4,"note":"4 full turns","x":86.5,"y":1.78},{"t":4.135,"name":"OPEN","note":"opened out of the hoop","x":88.43,"y":1.44},{"t":4.404,"name":"CATCH","kind":"soft","speed":71,"l":2.3,"angle":-90,"note":"caught the wire","x":93.77,"y":0.02},{"t":4.405,"name":"PASS","speed":71,"note":"past the trolleybus, on the wire","x":93.79,"y":0.01}]},"held_it":{"title":"Held it","kind":"badge","what":"a hard catch (over the absorption limit) survived under the body-load limit","group":null,"start":"pulled","params":{"release":58,"commit":3},"closes":true,"numbers":{},"note":"the body-load limit is impossibly high for now (base.yaml), so any hard catch survives","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.974,"name":"REL","kind":"hand","speed":80,"angle":58,"l":1,"note":"let go","x":64.7,"y":-0.52},{"t":3.717,"name":"APEX","height":2.25,"speed":70,"note":"the top of the flight","x":79.84,"y":2.25},{"t":3.718,"name":"REACH","height":2.25,"note":"reached for the wire","x":79.86,"y":2.25},{"t":3.984,"name":"OVER","height":4.3,"note":"over the windscreen, in the air","x":84.96,"y":1.9},{"t":4.581,"name":"CATCH","kind":"hard","speed":65,"l":1.45,"angle":-20,"note":"a hard catch","x":96.14,"y":-1.36},{"t":4.582,"name":"PASS","speed":65,"note":"past the trolleybus, on the wire","x":96.16,"y":-1.36},{"t":7.756,"name":"BACK","speed":81,"note":"swung back behind her tips","x":166.3,"y":-2.39},{"t":10.383,"name":"BACK","speed":81,"note":"swung back behind her tips","x":225.27,"y":-2.39}]},"through_the_arc":{"title":"Through the arc","kind":"badge","what":"arced between the wires, stayed on, and still passed the bus","group":null,"start":"pulled","params":{"release":58,"commit":1.6},"closes":true,"numbers":{"arc":true},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.974,"name":"REL","kind":"hand","speed":80,"angle":58,"l":1,"note":"let go","x":64.7,"y":-0.52},{"t":3.026,"name":"SPREAD","pitch":25,"note":"spread as a wing","x":65.77,"y":-0.13},{"t":3.045,"name":"ARC","seconds":3,"note":"an arc between her and the wire","x":66.16,"y":0},{"t":3.096,"name":"NARROW","note":"narrow","x":67.2,"y":0.36},{"t":3.264,"name":"CURL","spin":1.8,"note":"curled into the hoop","x":70.61,"y":1.34},{"t":3.459,"name":"TURN","n":1,"note":"1 full turn","x":74.54,"y":2.12},{"t":3.726,"name":"TURN","n":2,"note":"2 full turns","x":79.87,"y":2.58},{"t":3.769,"name":"APEX","height":2.59,"speed":71,"note":"the top of the flight","x":80.72,"y":2.59},{"t":3.983,"name":"OVER","height":4.76,"note":"over the windscreen, in the air","x":84.95,"y":2.36},{"t":3.993,"name":"TURN","n":3,"note":"3 full turns","x":85.15,"y":2.34},{"t":4.219,"name":"REACH","height":1.6,"note":"reached for the wire","x":89.58,"y":1.6},{"t":4.26,"name":"TURN","n":4,"note":"4 full turns","x":90.38,"y":1.41},{"t":4.419,"name":"OPEN","note":"opened out of the hoop","x":93.47,"y":0.52},{"t":4.607,"name":"CATCH","kind":"hard","speed":69,"l":1.27,"angle":-49,"note":"a hard catch","x":97.11,"y":-0.83},{"t":4.608,"name":"PASS","speed":69,"note":"past the trolleybus, on the wire","x":97.12,"y":-0.84},{"t":5.381,"name":"BACK","speed":82,"note":"swung back behind her tips","x":113.36,"y":-2.39},{"t":8.213,"name":"BACK","speed":83,"note":"swung back behind her tips","x":178.34,"y":-2.39},{"t":10.883,"name":"BACK","speed":83,"note":"swung back behind her tips","x":239.61,"y":-2.39}]},"short_pole_flight":{"title":"Short-pole flight","kind":"badge","what":"the lifted gait held for 2 s at the shortest pole length (free practice, no trolleybus: the bus ended the 1.5 s run of 2026-09-23, not the gait)","group":null,"start":"lifted","params":{"speed":26,"settle":1.5},"closes":true,"numbers":{"held_s":2.48},"note":"","ended":"time up","tokens":[{"t":0.051,"name":"SPREAD","pitch":25,"note":"spread as a wing","x":3.3,"y":-1.01},{"t":0.201,"name":"LIFTED","phase":"enter","speed":80,"lead":65,"lift":143,"note":"flying ahead of her tips","x":6.6,"y":-1.02},{"t":1.607,"name":"PULL","from":2.39,"to":1.77,"note":"pulled the poles in","x":37.47,"y":-0.78},{"t":4.442,"name":"ARC","seconds":3,"note":"an arc between her and the wire","x":91.77,"y":0},{"t":4.443,"name":"LIFTED","phase":"hold","seconds":4.44,"note":"held the lifted gait","x":91.78,"y":0},{"t":4.492,"name":"NARROW","note":"narrow","x":92.64,"y":0.04},{"t":5.097,"name":"BACK","speed":80,"note":"swung back behind her tips","x":103.47,"y":-1.01},{"t":7.171,"name":"BACK","speed":97,"note":"swung back behind her tips","x":148.44,"y":-1.01},{"t":9.209,"name":"BACK","speed":98,"note":"swung back behind her tips","x":201.36,"y":-1.01},{"t":11.251,"name":"BACK","speed":94,"note":"swung back behind her tips","x":255.27,"y":-1.01},{"t":13.046,"name":"BACK","speed":98,"note":"swung back behind her tips","x":302.63,"y":-1.01}]},"hoop_over_roof":{"title":"Hoop over the roof","kind":"badge","what":"curled into the hoop with her head above the trolleybus","group":null,"start":"pulled","params":{"release":58,"commit":1.6},"closes":true,"numbers":{"at_s":3.27},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.974,"name":"REL","kind":"hand","speed":80,"angle":58,"l":1,"note":"let go","x":64.7,"y":-0.52},{"t":3.193,"name":"CURL","spin":2.1,"note":"curled into the hoop","x":69.25,"y":0.88},{"t":3.369,"name":"TURN","n":1,"note":"1 full turn","x":72.89,"y":1.65},{"t":3.592,"name":"TURN","n":2,"note":"2 full turns","x":77.45,"y":2.18},{"t":3.725,"name":"APEX","height":2.27,"speed":73,"note":"the top of the flight","x":80.16,"y":2.27},{"t":3.816,"name":"TURN","n":3,"note":"3 full turns","x":82,"y":2.22},{"t":3.959,"name":"OVER","height":4.4,"note":"over the windscreen, in the air","x":84.89,"y":2},{"t":4.039,"name":"TURN","n":4,"note":"4 full turns","x":86.5,"y":1.78},{"t":4.095,"name":"REACH","height":1.59,"note":"reached for the wire","x":87.63,"y":1.59},{"t":4.262,"name":"TURN","n":5,"note":"5 full turns","x":90.96,"y":0.85},{"t":4.411,"name":"OPEN","note":"opened out of the hoop","x":93.93,"y":-0.03},{"t":4.502,"name":"CATCH","kind":"hard","speed":71,"l":1.02,"angle":-48,"note":"a hard catch","x":95.73,"y":-0.68},{"t":4.503,"name":"PASS","speed":71,"note":"past the trolleybus, on the wire","x":95.75,"y":-0.69},{"t":7.744,"name":"BACK","speed":83,"note":"swung back behind her tips","x":169.03,"y":-2.39}]},"kiss":{"title":"Kiss","kind":"badge","what":"a catch with under 0.5 m/s of speed along the poles to absorb","group":null,"start":"pulled","params":{"release":45,"commit":1.4,"polesOut":false},"closes":true,"numbers":{"along_mps":0.24},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.948,"name":"REL","kind":"hand","speed":85,"angle":45,"l":1,"note":"let go","x":64.13,"y":-0.7},{"t":3.581,"name":"APEX","height":1.28,"speed":79,"note":"the top of the flight","x":78.3,"y":1.28},{"t":3.582,"name":"REACH","height":1.28,"note":"reached for the wire","x":78.32,"y":1.28},{"t":3.766,"name":"TURN","n":1,"note":"1 full turn","x":82.32,"y":1.12},{"t":3.874,"name":"OVER","height":3.26,"note":"over the windscreen, in the air","x":84.63,"y":0.86},{"t":4.07,"name":"CATCH","kind":"soft","speed":76,"l":2.28,"angle":93,"note":"caught the wire","x":88.81,"y":0.12},{"t":4.162,"name":"PASS","speed":77,"note":"past the trolleybus, on the wire","x":90.86,"y":-0.34},{"t":4.603,"name":"BACK","speed":83,"note":"swung back behind her tips","x":98.37,"y":-2.39},{"t":7.702,"name":"BACK","speed":83,"note":"swung back behind her tips","x":164.39,"y":-2.39},{"t":10.485,"name":"BACK","speed":83,"note":"swung back behind her tips","x":226.4,"y":-2.39},{"t":13.331,"name":"BACK","speed":83,"note":"swung back behind her tips","x":291.65,"y":-2.39}]},"swoop":{"title":"Swoop","kind":"line","what":"REL \u2192 SPREAD \u2192 CATCH \u2192 LIFTED before the swing back (soft or hard catch: that is Kiss / Held it)","group":null,"start":"pulled","params":{"release":52,"pitch":16,"commit":1.8,"entry":"coast","wingAt":30,"polesOut":true},"closes":true,"numbers":{"got":"REL \u2192 SPREAD \u2192 CATCH.hard \u2192 LIFTED","lifted_after_catch_s":0.56,"held_s":2.82},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.962,"name":"REL","kind":"hand","speed":82,"angle":52,"l":1,"note":"let go","x":64.44,"y":-0.6},{"t":3.159,"name":"SPREAD","pitch":20,"note":"spread as a wing","x":68.71,"y":0.59},{"t":3.963,"name":"OVER","height":5.29,"note":"over the windscreen, in the air","x":84.9,"y":2.89},{"t":4.019,"name":"APEX","height":2.9,"speed":69,"note":"the top of the flight","x":85.98,"y":2.9},{"t":4.61,"name":"REACH","height":1.79,"note":"reached for the wire","x":97.02,"y":1.79},{"t":4.66,"name":"NARROW","note":"narrow","x":97.93,"y":1.6},{"t":5.119,"name":"CATCH","kind":"hard","speed":61,"l":1.59,"angle":-36,"note":"a hard catch","x":106.01,"y":-1.28},{"t":5.12,"name":"PASS","speed":61,"note":"past the trolleybus, on the wire","x":106.03,"y":-1.29},{"t":5.499,"name":"SPREAD","pitch":35,"note":"spread as a wing","x":114.32,"y":-1.49},{"t":5.678,"name":"LIFTED","phase":"enter","speed":58,"lead":53,"lift":138,"note":"flying ahead of her tips","x":117.94,"y":-1.44},{"t":8.3,"name":"ARC","seconds":3,"note":"an arc between her and the wire","x":160.46,"y":0},{"t":8.301,"name":"LIFTED","phase":"hold","seconds":2.82,"note":"held the lifted gait","x":160.47,"y":0},{"t":8.351,"name":"NARROW","note":"narrow","x":161.27,"y":0.02},{"t":9.266,"name":"BACK","speed":58,"note":"swung back behind her tips","x":173.53,"y":-2.39},{"t":12.681,"name":"BACK","speed":46,"note":"swung back behind her tips","x":219.59,"y":-2.39}]},"swoop_under":{"title":"Swoop below the wire","kind":"line","what":"REL \u2192 SPREAD \u2192 CATCH \u2192 LIFTED with her head never above the wires: a wing hop in the space under them, no trolleybus in the way (free practice)","group":null,"start":"pulled","params":{"release":24,"hard":false,"pitch":8,"commit":-0.3,"entry":"brake","wingAt":30,"polesOut":false},"closes":false,"numbers":{"got":"REL \u2192 SPREAD","apex_m":-1.88},"note":"","ended":"She hit the road.","tokens":[{"t":1.276,"name":"REL","kind":"hand","speed":72,"angle":24,"l":2.4,"note":"let go","x":26.91,"y":-2.19},{"t":1.328,"name":"SPREAD","pitch":20,"note":"spread as a wing","x":27.94,"y":-2.09},{"t":1.556,"name":"APEX","height":-1.88,"speed":68,"note":"the top of the flight","x":32.32,"y":-1.88},{"t":1.557,"name":"REACH","height":-1.88,"note":"reached for the wire","x":32.34,"y":-1.88},{"t":1.608,"name":"NARROW","note":"narrow","x":33.3,"y":-1.9}]},"rolled_up":{"title":"Rolled up","kind":"line","what":"REL \u2192 CURL \u2192 OPEN \u2192 SPREAD \u2192 CATCH in one flight","group":null,"start":"pulled","params":{"release":58,"openAt":0.4,"pitch":12,"commit":1.4},"closes":true,"numbers":{"got":"REL \u2192 CURL \u2192 OPEN \u2192 SPREAD \u2192 CATCH.soft"},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.974,"name":"REL","kind":"hand","speed":80,"angle":58,"l":1,"note":"let go","x":64.7,"y":-0.52},{"t":3.193,"name":"CURL","spin":2.1,"note":"curled into the hoop","x":69.25,"y":0.88},{"t":3.369,"name":"TURN","n":1,"note":"1 full turn","x":72.89,"y":1.65},{"t":3.474,"name":"OPEN","note":"opened out of the hoop","x":75.04,"y":1.96},{"t":3.615,"name":"SPREAD","pitch":12,"note":"spread as a wing","x":77.91,"y":2.21},{"t":3.783,"name":"APEX","height":2.31,"speed":72,"note":"the top of the flight","x":81.31,"y":2.31},{"t":3.964,"name":"OVER","height":4.59,"note":"over the windscreen, in the air","x":84.9,"y":2.19},{"t":4.287,"name":"REACH","height":1.4,"note":"reached for the wire","x":91.19,"y":1.4},{"t":4.337,"name":"NARROW","note":"narrow","x":92.16,"y":1.2},{"t":4.656,"name":"TURN","n":2,"note":"2 full turns","x":98.25,"y":-0.59},{"t":4.694,"name":"CATCH","kind":"soft","speed":68,"l":1.76,"angle":60,"note":"caught the wire","x":98.97,"y":-0.87},{"t":4.695,"name":"PASS","speed":68,"note":"past the trolleybus, on the wire","x":99,"y":-0.88},{"t":4.745,"name":"SPREAD","pitch":35,"note":"spread as a wing","x":100.03,"y":-1.29},{"t":5.112,"name":"BACK","speed":78,"note":"swung back behind her tips","x":105.83,"y":-2.39},{"t":5.736,"name":"ARC","seconds":3,"note":"an arc between her and the wire","x":115.88,"y":0},{"t":5.786,"name":"NARROW","note":"narrow","x":116.82,"y":0.18},{"t":8.512,"name":"BACK","speed":83,"note":"swung back behind her tips","x":177.12,"y":-2.39},{"t":11.434,"name":"BACK","speed":83,"note":"swung back behind her tips","x":242.11,"y":-2.39}]},"one_breath":{"title":"One breath","kind":"line","what":"PULL \u2192 REL \u2192 CATCH \u2192 PASS in under 3 s","group":null,"start":"pulled","params":{"release":58,"gap":16.5},"closes":true,"numbers":{"breath_s":1.65},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.974,"name":"REL","kind":"hand","speed":80,"angle":58,"l":1,"note":"let go","x":64.7,"y":-0.52},{"t":3.717,"name":"APEX","height":2.25,"speed":70,"note":"the top of the flight","x":79.84,"y":2.25},{"t":3.984,"name":"OVER","height":4.3,"note":"over the windscreen, in the air","x":84.96,"y":1.9},{"t":4.134,"name":"REACH","height":1.4,"note":"reached for the wire","x":87.81,"y":1.4},{"t":4.581,"name":"CATCH","kind":"hard","speed":65,"l":1.45,"angle":-20,"note":"a hard catch","x":96.14,"y":-1.36},{"t":4.582,"name":"PASS","speed":65,"note":"past the trolleybus, on the wire","x":96.16,"y":-1.36},{"t":7.757,"name":"BACK","speed":81,"note":"swung back behind her tips","x":166.27,"y":-2.39},{"t":10.402,"name":"BACK","speed":81,"note":"swung back behind her tips","x":225.58,"y":-2.39}]},"full_repertoire":{"title":"Full repertoire","kind":"line","what":"REL, CURL, OPEN, SPREAD, CATCH and LIFTED, in any order, within 6 s","group":null,"start":"pulled","params":{"release":58,"openAt":0.6,"pitch":12,"commit":1.4,"entry":"brake","wingAt":30,"polesOut":true},"closes":true,"numbers":{"got":"REL CURL OPEN SPREAD CATCH LIFTED","span_s":3.52,"held_s":0.93},"note":"","ended":"time up","tokens":[{"t":2.93,"name":"PULL","from":2.39,"to":1,"note":"pulled the poles in","x":63.71,"y":-0.8},{"t":2.974,"name":"REL","kind":"hand","speed":80,"angle":58,"l":1,"note":"let go","x":64.7,"y":-0.52},{"t":3.193,"name":"CURL","spin":2.1,"note":"curled into the hoop","x":69.25,"y":0.88},{"t":3.369,"name":"TURN","n":1,"note":"1 full turn","x":72.89,"y":1.65},{"t":3.592,"name":"TURN","n":2,"note":"2 full turns","x":77.45,"y":2.18},{"t":3.674,"name":"OPEN","note":"opened out of the hoop","x":79.12,"y":2.25},{"t":3.725,"name":"APEX","height":2.27,"speed":73,"note":"the top of the flight","x":80.16,"y":2.27},{"t":3.815,"name":"SPREAD","pitch":12,"note":"spread as a wing","x":81.98,"y":2.23},{"t":3.96,"name":"OVER","height":4.44,"note":"over the windscreen, in the air","x":84.88,"y":2.04},{"t":4.205,"name":"REACH","height":1.39,"note":"reached for the wire","x":89.75,"y":1.39},{"t":4.255,"name":"NARROW","note":"narrow","x":90.73,"y":1.21},{"t":4.705,"name":"CATCH","kind":"hard","speed":66,"l":1.51,"angle":7,"note":"a hard catch","x":99.24,"y":-1.5},{"t":4.706,"name":"PASS","speed":66,"note":"past the trolleybus, on the wire","x":99.26,"y":-1.5},{"t":4.864,"name":"BACK","speed":66,"note":"swung back behind her tips","x":101.96,"y":-1.51},{"t":6.318,"name":"SPREAD","pitch":35,"note":"spread as a wing","x":128.18,"y":-1.42},{"t":6.496,"name":"LIFTED","phase":"enter","speed":43,"lead":55,"lift":85,"note":"flying ahead of her tips","x":131.21,"y":-1.38},{"t":7.228,"name":"LIFTED","phase":"hold","seconds":0.93,"note":"held the lifted gait","x":140.32,"y":-0.86},{"t":8.115,"name":"BACK","speed":43,"note":"swung back behind her tips","x":148.78,"y":-2.39},{"t":10.76,"name":"LIFTED","phase":"enter","speed":42,"lead":40,"lift":63,"note":"flying ahead of her tips","x":181.42,"y":-1.83},{"t":10.814,"name":"LIFTED","phase":"hold","seconds":0.25,"note":"held the lifted gait","x":182.06,"y":-1.83},{"t":11.602,"name":"BACK","speed":42,"note":"swung back behind her tips","x":189.75,"y":-2.39}]}},"model":{"colors":{"violet":"#6F5B93","cream":"#F6ECDB","amber":"#C9822B","rust":"#B4472A","pole":"#2B2335","copper":"#A8672E","ink":"#2B2335","white":"#FBF7F0"},"meta":{"LB":0.8,"rim":-0.28,"poleRootY":0.21999999999999997,"poleLong":2.4,"poleShort":1.0,"wireZ":0.26,"headAnchorY":0.1,"neckY":0.0,"anchors":{"fluke":-0.8,"collar":0.02,"knot":0.02,"streamer":0.02},"head":["head","ears","eye_white","iris","pupil","glint","lid","eyelid"],"bend":["body_narrow","body_spread","poles"],"eye":["eye_white","iris","pupil","glint"],"shut":["lid","eyelid"]},"parts":[{"name":"head","material":"cream","polys":[[[0.12,-0.08,0],[0.2,0.22,-0.1],[0.2,0.22,0.1]],[[0.12,-0.08,0],[0.2,0.22,0.1],[0.02,0.22,0.17]],[[0.12,-0.08,0],[0.02,0.22,0.17],[-0.12,0.22,0]],[[0.12,-0.08,0],[-0.12,0.22,0],[0.02,0.22,-0.17]],[[0.12,-0.08,0],[0.02,0.22,-0.17],[0.2,0.22,-0.1]],[[0.2,0.22,0.1],[0.2,0.22,-0.1],[0.02,0.22,-0.17],[-0.12,0.22,0],[0.02,0.22,0.17]]]},{"name":"ears","material":"cream","polys":[[[-0.02,0.22,0.16],[0.06,0.22,0.16],[0.02,0.34,0.15]],[[-0.02,0.22,0.08],[-0.02,0.22,0.16],[0.02,0.34,0.15]],[[0.06,0.22,0.08],[-0.02,0.22,0.08],[0.02,0.34,0.15]],[[0.06,0.22,0.16],[0.06,0.22,0.08],[0.02,0.34,0.15]],[[-0.02,0.22,-0.08],[0.06,0.22,-0.08],[0.02,0.34,-0.15]],[[-0.02,0.22,-0.16],[-0.02,0.22,-0.08],[0.02,0.34,-0.15]],[[0.06,0.22,-0.16],[-0.02,0.22,-0.16],[0.02,0.34,-0.15]],[[0.06,0.22,-0.08],[0.06,0.22,-0.16],[0.02,0.34,-0.15]]]},{"name":"eye_white","material":"white","polys":[[[0.1934,0.0932,0.0476],[0.168,0.1,0.0654],[0.1596,0.0684,0.0566],[0.1873,0.0702,0.0412]],[[0.1873,0.0702,0.0412],[0.1596,0.0684,0.0566],[0.1534,0.0453,0.0327],[0.1828,0.0534,0.0238]],[[0.1828,0.0534,0.0238],[0.1534,0.0453,0.0327],[0.1512,0.0368,0.0],[0.1812,0.0472,0.0]],[[0.1812,0.0472,0.0],[0.1512,0.0368,0.0],[0.1534,0.0453,-0.0327],[0.1828,0.0534,-0.0238]],[[0.1828,0.0534,-0.0238],[0.1534,0.0453,-0.0327],[0.1596,0.0684,-0.0566],[0.1873,0.0702,-0.0412]],[[0.1873,0.0702,-0.0412],[0.1596,0.0684,-0.0566],[0.168,0.1,-0.0654],[0.1934,0.0932,-0.0476]],[[0.1934,0.0932,-0.0476],[0.168,0.1,-0.0654],[0.1764,0.1316,-0.0566],[0.1996,0.1162,-0.0412]],[[0.1996,0.1162,-0.0412],[0.1764,0.1316,-0.0566],[0.1826,0.1547,-0.0327],[0.2041,0.133,-0.0238]],[[0.2041,0.133,-0.0238],[0.1826,0.1547,-0.0327],[0.1848,0.1632,-0.0],[0.2057,0.1392,-0.0]],[[0.2057,0.1392,-0.0],[0.1848,0.1632,-0.0],[0.1826,0.1547,0.0327],[0.2041,0.133,0.0238]],[[0.2041,0.133,0.0238],[0.1826,0.1547,0.0327],[0.1764,0.1316,0.0566],[0.1996,0.1162,0.0412]],[[0.1996,0.1162,0.0412],[0.1764,0.1316,0.0566],[0.168,0.1,0.0654],[0.1934,0.0932,0.0476]]]},{"name":"iris","material":"amber","polys":[[[0.2071,0.0896,0.0248],[0.1934,0.0932,0.0476],[0.1873,0.0702,0.0412],[0.2039,0.0776,0.0215]],[[0.2039,0.0776,0.0215],[0.1873,0.0702,0.0412],[0.1828,0.0534,0.0238],[0.2016,0.0688,0.0124]],[[0.2016,0.0688,0.0124],[0.1828,0.0534,0.0238],[0.1812,0.0472,0.0],[0.2007,0.0656,0.0]],[[0.2007,0.0656,0.0],[0.1812,0.0472,0.0],[0.1828,0.0534,-0.0238],[0.2016,0.0688,-0.0124]],[[0.2016,0.0688,-0.0124],[0.1828,0.0534,-0.0238],[0.1873,0.0702,-0.0412],[0.2039,0.0776,-0.0215]],[[0.2039,0.0776,-0.0215],[0.1873,0.0702,-0.0412],[0.1934,0.0932,-0.0476],[0.2071,0.0896,-0.0248]],[[0.2071,0.0896,-0.0248],[0.1934,0.0932,-0.0476],[0.1996,0.1162,-0.0412],[0.2103,0.1015,-0.0215]],[[0.2103,0.1015,-0.0215],[0.1996,0.1162,-0.0412],[0.2041,0.133,-0.0238],[0.2126,0.1103,-0.0124]],[[0.2126,0.1103,-0.0124],[0.2041,0.133,-0.0238],[0.2057,0.1392,-0.0],[0.2135,0.1135,-0.0]],[[0.2135,0.1135,-0.0],[0.2057,0.1392,-0.0],[0.2041,0.133,0.0238],[0.2126,0.1103,0.0124]],[[0.2126,0.1103,0.0124],[0.2041,0.133,0.0238],[0.1996,0.1162,0.0412],[0.2103,0.1015,0.0215]],[[0.2103,0.1015,0.0215],[0.1996,0.1162,0.0412],[0.1934,0.0932,0.0476],[0.2071,0.0896,0.0248]]]},{"name":"pupil","material":"ink","polys":[[[0.2115,0.0884,0.0],[0.2071,0.0896,0.0248],[0.2039,0.0776,0.0215]],[[0.2115,0.0884,0.0],[0.2039,0.0776,0.0215],[0.2016,0.0688,0.0124]],[[0.2115,0.0884,0.0],[0.2016,0.0688,0.0124],[0.2007,0.0656,0.0]],[[0.2115,0.0884,0.0],[0.2007,0.0656,0.0],[0.2016,0.0688,-0.0124]],[[0.2115,0.0884,0.0],[0.2016,0.0688,-0.0124],[0.2039,0.0776,-0.0215]],[[0.2115,0.0884,0.0],[0.2039,0.0776,-0.0215],[0.2071,0.0896,-0.0248]],[[0.2115,0.0884,0.0],[0.2071,0.0896,-0.0248],[0.2103,0.1015,-0.0215]],[[0.2115,0.0884,0.0],[0.2103,0.1015,-0.0215],[0.2126,0.1103,-0.0124]],[[0.2115,0.0884,0.0],[0.2126,0.1103,-0.0124],[0.2135,0.1135,-0.0]],[[0.2115,0.0884,0.0],[0.2135,0.1135,-0.0],[0.2126,0.1103,0.0124]],[[0.2115,0.0884,0.0],[0.2126,0.1103,0.0124],[0.2103,0.1015,0.0215]],[[0.2115,0.0884,0.0],[0.2103,0.1015,0.0215],[0.2071,0.0896,0.0248]]]},{"name":"glint","material":"white","polys":[[[0.2056,0.0727,-0.0059],[0.2039,0.0666,-0.0086],[0.2032,0.064,-0.0149],[0.2039,0.0666,-0.0213],[0.2056,0.0727,-0.0239],[0.2072,0.0789,-0.0213],[0.2079,0.0814,-0.0149],[0.2072,0.0789,-0.0086]]]},{"name":"lid","material":"cream","polys":[[[0.2115,0.0884,0.0],[0.2071,0.0896,0.0248],[0.2039,0.0776,0.0215]],[[0.2115,0.0884,0.0],[0.2039,0.0776,0.0215],[0.2016,0.0688,0.0124]],[[0.2115,0.0884,0.0],[0.2016,0.0688,0.0124],[0.2007,0.0656,0.0]],[[0.2115,0.0884,0.0],[0.2007,0.0656,0.0],[0.2016,0.0688,-0.0124]],[[0.2115,0.0884,0.0],[0.2016,0.0688,-0.0124],[0.2039,0.0776,-0.0215]],[[0.2115,0.0884,0.0],[0.2039,0.0776,-0.0215],[0.2071,0.0896,-0.0248]],[[0.2115,0.0884,0.0],[0.2071,0.0896,-0.0248],[0.2103,0.1015,-0.0215]],[[0.2115,0.0884,0.0],[0.2103,0.1015,-0.0215],[0.2126,0.1103,-0.0124]],[[0.2115,0.0884,0.0],[0.2126,0.1103,-0.0124],[0.2135,0.1135,-0.0]],[[0.2115,0.0884,0.0],[0.2135,0.1135,-0.0],[0.2126,0.1103,0.0124]],[[0.2115,0.0884,0.0],[0.2126,0.1103,0.0124],[0.2103,0.1015,0.0215]],[[0.2115,0.0884,0.0],[0.2103,0.1015,0.0215],[0.2071,0.0896,0.0248]],[[0.2071,0.0896,0.0248],[0.1934,0.0932,0.0476],[0.1873,0.0702,0.0412],[0.2039,0.0776,0.0215]],[[0.2039,0.0776,0.0215],[0.1873,0.0702,0.0412],[0.1828,0.0534,0.0238],[0.2016,0.0688,0.0124]],[[0.2016,0.0688,0.0124],[0.1828,0.0534,0.0238],[0.1812,0.0472,0.0],[0.2007,0.0656,0.0]],[[0.2007,0.0656,0.0],[0.1812,0.0472,0.0],[0.1828,0.0534,-0.0238],[0.2016,0.0688,-0.0124]],[[0.2016,0.0688,-0.0124],[0.1828,0.0534,-0.0238],[0.1873,0.0702,-0.0412],[0.2039,0.0776,-0.0215]],[[0.2039,0.0776,-0.0215],[0.1873,0.0702,-0.0412],[0.1934,0.0932,-0.0476],[0.2071,0.0896,-0.0248]],[[0.2071,0.0896,-0.0248],[0.1934,0.0932,-0.0476],[0.1996,0.1162,-0.0412],[0.2103,0.1015,-0.0215]],[[0.2103,0.1015,-0.0215],[0.1996,0.1162,-0.0412],[0.2041,0.133,-0.0238],[0.2126,0.1103,-0.0124]],[[0.2126,0.1103,-0.0124],[0.2041,0.133,-0.0238],[0.2057,0.1392,-0.0],[0.2135,0.1135,-0.0]],[[0.2135,0.1135,-0.0],[0.2057,0.1392,-0.0],[0.2041,0.133,0.0238],[0.2126,0.1103,0.0124]],[[0.2126,0.1103,0.0124],[0.2041,0.133,0.0238],[0.1996,0.1162,0.0412],[0.2103,0.1015,0.0215]],[[0.2103,0.1015,0.0215],[0.1996,0.1162,0.0412],[0.1934,0.0932,0.0476],[0.2071,0.0896,0.0248]],[[0.1934,0.0932,0.0476],[0.168,0.1,0.0654],[0.1596,0.0684,0.0566],[0.1873,0.0702,0.0412]],[[0.1873,0.0702,0.0412],[0.1596,0.0684,0.0566],[0.1534,0.0453,0.0327],[0.1828,0.0534,0.0238]],[[0.1828,0.0534,0.0238],[0.1534,0.0453,0.0327],[0.1512,0.0368,0.0],[0.1812,0.0472,0.0]],[[0.1812,0.0472,0.0],[0.1512,0.0368,0.0],[0.1534,0.0453,-0.0327],[0.1828,0.0534,-0.0238]],[[0.1828,0.0534,-0.0238],[0.1534,0.0453,-0.0327],[0.1596,0.0684,-0.0566],[0.1873,0.0702,-0.0412]],[[0.1873,0.0702,-0.0412],[0.1596,0.0684,-0.0566],[0.168,0.1,-0.0654],[0.1934,0.0932,-0.0476]],[[0.1934,0.0932,-0.0476],[0.168,0.1,-0.0654],[0.1764,0.1316,-0.0566],[0.1996,0.1162,-0.0412]],[[0.1996,0.1162,-0.0412],[0.1764,0.1316,-0.0566],[0.1826,0.1547,-0.0327],[0.2041,0.133,-0.0238]],[[0.2041,0.133,-0.0238],[0.1826,0.1547,-0.0327],[0.1848,0.1632,-0.0],[0.2057,0.1392,-0.0]],[[0.2057,0.1392,-0.0],[0.1848,0.1632,-0.0],[0.1826,0.1547,0.0327],[0.2041,0.133,0.0238]],[[0.2041,0.133,0.0238],[0.1826,0.1547,0.0327],[0.1764,0.1316,0.0566],[0.1996,0.1162,0.0412]],[[0.1996,0.1162,0.0412],[0.1764,0.1316,0.0566],[0.168,0.1,0.0654],[0.1934,0.0932,0.0476]]]},{"name":"eyelid","material":"ink","polys":[[[0.1856,0.1015,-0.06],[0.2018,0.0972,-0.0438],[0.1987,0.0856,-0.0438],[0.1825,0.0899,-0.06]],[[0.2018,0.0972,-0.0438],[0.2123,0.0944,-0.0231],[0.2092,0.0828,-0.0231],[0.1987,0.0856,-0.0438]],[[0.2123,0.0944,-0.0231],[0.2159,0.0934,0.0],[0.2128,0.0818,0.0],[0.2092,0.0828,-0.0231]],[[0.2159,0.0934,0.0],[0.2123,0.0944,0.0231],[0.2092,0.0828,0.0231],[0.2128,0.0818,0.0]],[[0.2123,0.0944,0.0231],[0.2018,0.0972,0.0438],[0.1987,0.0856,0.0438],[0.2092,0.0828,0.0231]],[[0.2018,0.0972,0.0438],[0.1856,0.1015,0.06],[0.1825,0.0899,0.06],[0.1987,0.0856,0.0438]]]},{"name":"collar","material":"rust","polys":[[[0.1,0.06,0.1],[-0.1,0.06,0.1],[-0.1,-0.02,0.1],[0.1,-0.02,0.1]],[[-0.1,0.06,0.1],[-0.1,0.06,-0.1],[-0.1,-0.02,-0.1],[-0.1,-0.02,0.1]],[[-0.1,0.06,-0.1],[0.1,0.06,-0.1],[0.1,-0.02,-0.1],[-0.1,-0.02,-0.1]],[[0.1,0.06,-0.1],[0.1,0.06,0.1],[0.1,-0.02,0.1],[0.1,-0.02,-0.1]]]},{"name":"knot","material":"rust","polys":[[[-0.02,0.02,0.145],[0.025,0.065,0.1],[-0.065,0.065,0.1]],[[-0.02,0.02,0.145],[-0.065,0.065,0.1],[-0.065,-0.025,0.1]],[[-0.02,0.02,0.145],[-0.065,-0.025,0.1],[0.025,-0.025,0.1]],[[-0.02,0.02,0.145],[0.025,-0.025,0.1],[0.025,0.065,0.1]],[[-0.02,0.02,0.055],[0.025,-0.025,0.1],[-0.065,-0.025,0.1]],[[-0.02,0.02,0.055],[-0.065,-0.025,0.1],[-0.065,0.065,0.1]],[[-0.02,0.02,0.055],[-0.065,0.065,0.1],[0.025,0.065,0.1]],[[-0.02,0.02,0.055],[0.025,0.065,0.1],[0.025,-0.025,0.1]]]},{"name":"streamer","material":"rust","polys":[[[-0.1,0.03,0.1],[-0.2,-0.0013,0.1145],[-0.2,-0.0612,0.1145],[-0.1,-0.03,0.1]],[[-0.2,-0.0013,0.1145],[-0.3,-0.055,0.1077],[-0.3,-0.115,0.1077],[-0.2,-0.0612,0.1145]],[[-0.3,-0.055,0.1077],[-0.4,-0.1313,0.0897],[-0.4,-0.1913,0.0897],[-0.3,-0.115,0.1077]],[[-0.4,-0.1313,0.0897],[-0.5,-0.23,0.0867],[-0.5,-0.29,0.0867],[-0.4,-0.1913,0.0897]],[[-0.5,-0.23,0.0867],[-0.6,-0.3512,0.1032],[-0.6,-0.4113,0.1032],[-0.5,-0.29,0.0867]]]},{"name":"body_narrow","material":"violet","polys":[[[0,-0.07,0.03],[0.03,-0.07,0],[0.0,-0.0,0]],[[-0.03,-0.07,0],[0,-0.07,0.03],[0,-0.0,0.0]],[[0,-0.07,-0.03],[-0.03,-0.07,0],[-0.0,-0.0,0]],[[0.03,-0.07,0],[0,-0.07,-0.03],[0,-0.0,-0.0]],[[0,-0.07,0.03],[0,-0.14,0.06],[0.06,-0.14,0],[0.03,-0.07,0]],[[-0.03,-0.07,0],[-0.06,-0.14,0],[0,-0.14,0.06],[0,-0.07,0.03]],[[0,-0.07,-0.03],[0,-0.14,-0.06],[-0.06,-0.14,0],[-0.03,-0.07,0]],[[0.03,-0.07,0],[0.06,-0.14,0],[0,-0.14,-0.06],[0,-0.07,-0.03]],[[0,-0.14,0.06],[0,-0.21,0.09],[0.09,-0.21,0],[0.06,-0.14,0]],[[-0.06,-0.14,0],[-0.09,-0.21,0],[0,-0.21,0.09],[0,-0.14,0.06]],[[0,-0.14,-0.06],[0,-0.21,-0.09],[-0.09,-0.21,0],[-0.06,-0.14,0]],[[0.06,-0.14,0],[0.09,-0.21,0],[0,-0.21,-0.09],[0,-0.14,-0.06]],[[0,-0.21,0.09],[0,-0.28,0.12],[0.12,-0.28,0],[0.09,-0.21,0]],[[-0.09,-0.21,0],[-0.12,-0.28,0],[0,-0.28,0.12],[0,-0.21,0.09]],[[0,-0.21,-0.09],[0,-0.28,-0.12],[-0.12,-0.28,0],[-0.09,-0.21,0]],[[0.09,-0.21,0],[0.12,-0.28,0],[0,-0.28,-0.12],[0,-0.21,-0.09]],[[0,-0.28,0.12],[0,-0.3667,0.1],[0.1,-0.3667,0],[0.12,-0.28,0]],[[-0.12,-0.28,0],[-0.1,-0.3667,0],[0,-0.3667,0.1],[0,-0.28,0.12]],[[0,-0.28,-0.12],[0,-0.3667,-0.1],[-0.1,-0.3667,0],[-0.12,-0.28,0]],[[0.12,-0.28,0],[0.1,-0.3667,0],[0,-0.3667,-0.1],[0,-0.28,-0.12]],[[0,-0.3667,0.1],[0,-0.4533,0.08],[0.08,-0.4533,0],[0.1,-0.3667,0]],[[-0.1,-0.3667,0],[-0.08,-0.4533,0],[0,-0.4533,0.08],[0,-0.3667,0.1]],[[0,-0.3667,-0.1],[0,-0.4533,-0.08],[-0.08,-0.4533,0],[-0.1,-0.3667,0]],[[0.1,-0.3667,0],[0.08,-0.4533,0],[0,-0.4533,-0.08],[0,-0.3667,-0.1]],[[0,-0.4533,0.08],[0,-0.54,0.06],[0.06,-0.54,0],[0.08,-0.4533,0]],[[-0.08,-0.4533,0],[-0.06,-0.54,0],[0,-0.54,0.06],[0,-0.4533,0.08]],[[0,-0.4533,-0.08],[0,-0.54,-0.06],[-0.06,-0.54,0],[-0.08,-0.4533,0]],[[0.08,-0.4533,0],[0.06,-0.54,0],[0,-0.54,-0.06],[0,-0.4533,-0.08]],[[0,-0.54,0.06],[0,-0.6267,0.04],[0.04,-0.6267,0],[0.06,-0.54,0]],[[-0.06,-0.54,0],[-0.04,-0.6267,0],[0,-0.6267,0.04],[0,-0.54,0.06]],[[0,-0.54,-0.06],[0,-0.6267,-0.04],[-0.04,-0.6267,0],[-0.06,-0.54,0]],[[0.06,-0.54,0],[0.04,-0.6267,0],[0,-0.6267,-0.04],[0,-0.54,-0.06]],[[0,-0.6267,0.04],[0,-0.7133,0.02],[0.02,-0.7133,0],[0.04,-0.6267,0]],[[-0.04,-0.6267,0],[-0.02,-0.7133,0],[0,-0.7133,0.02],[0,-0.6267,0.04]],[[0,-0.6267,-0.04],[0,-0.7133,-0.02],[-0.02,-0.7133,0],[-0.04,-0.6267,0]],[[0.04,-0.6267,0],[0.02,-0.7133,0],[0,-0.7133,-0.02],[0,-0.6267,-0.04]],[[0,-0.7133,0.02],[0.0,-0.8,0],[0.02,-0.7133,0]],[[-0.02,-0.7133,0],[0,-0.8,0.0],[0,-0.7133,0.02]],[[0,-0.7133,-0.02],[-0.0,-0.8,0],[-0.02,-0.7133,0]],[[0.02,-0.7133,0],[0,-0.8,-0.0],[0,-0.7133,-0.02]]]},{"name":"body_spread","material":"violet","polys":[[[0,-0.07,0.0437],[0.01,-0.07,0],[0.0,-0.0,0]],[[-0.01,-0.07,0],[0,-0.07,0.0437],[0,-0.0,0.0]],[[0,-0.07,-0.0437],[-0.01,-0.07,0],[-0.0,-0.0,0]],[[0.01,-0.07,0],[0,-0.07,-0.0437],[0,-0.0,-0.0]],[[0,-0.07,0.0437],[0,-0.14,0.0875],[0.02,-0.14,0],[0.01,-0.07,0]],[[-0.01,-0.07,0],[-0.02,-0.14,0],[0,-0.14,0.0875],[0,-0.07,0.0437]],[[0,-0.07,-0.0437],[0,-0.14,-0.0875],[-0.02,-0.14,0],[-0.01,-0.07,0]],[[0.01,-0.07,0],[0.02,-0.14,0],[0,-0.14,-0.0875],[0,-0.07,-0.0437]],[[0,-0.14,0.0875],[0,-0.21,0.1312],[0.03,-0.21,0],[0.02,-0.14,0]],[[-0.02,-0.14,0],[-0.03,-0.21,0],[0,-0.21,0.1312],[0,-0.14,0.0875]],[[0,-0.14,-0.0875],[0,-0.21,-0.1312],[-0.03,-0.21,0],[-0.02,-0.14,0]],[[0.02,-0.14,0],[0.03,-0.21,0],[0,-0.21,-0.1312],[0,-0.14,-0.0875]],[[0,-0.21,0.1312],[0,-0.28,0.175],[0.04,-0.28,0],[0.03,-0.21,0]],[[-0.03,-0.21,0],[-0.04,-0.28,0],[0,-0.28,0.175],[0,-0.21,0.1312]],[[0,-0.21,-0.1312],[0,-0.28,-0.175],[-0.04,-0.28,0],[-0.03,-0.21,0]],[[0.03,-0.21,0],[0.04,-0.28,0],[0,-0.28,-0.175],[0,-0.21,-0.1312]],[[0,-0.28,0.175],[0,-0.3667,0.1458],[0.0333,-0.3667,0],[0.04,-0.28,0]],[[-0.04,-0.28,0],[-0.0333,-0.3667,0],[0,-0.3667,0.1458],[0,-0.28,0.175]],[[0,-0.28,-0.175],[0,-0.3667,-0.1458],[-0.0333,-0.3667,0],[-0.04,-0.28,0]],[[0.04,-0.28,0],[0.0333,-0.3667,0],[0,-0.3667,-0.1458],[0,-0.28,-0.175]],[[0,-0.3667,0.1458],[0,-0.4533,0.1167],[0.0267,-0.4533,0],[0.0333,-0.3667,0]],[[-0.0333,-0.3667,0],[-0.0267,-0.4533,0],[0,-0.4533,0.1167],[0,-0.3667,0.1458]],[[0,-0.3667,-0.1458],[0,-0.4533,-0.1167],[-0.0267,-0.4533,0],[-0.0333,-0.3667,0]],[[0.0333,-0.3667,0],[0.0267,-0.4533,0],[0,-0.4533,-0.1167],[0,-0.3667,-0.1458]],[[0,-0.4533,0.1167],[0,-0.54,0.0875],[0.02,-0.54,0],[0.0267,-0.4533,0]],[[-0.0267,-0.4533,0],[-0.02,-0.54,0],[0,-0.54,0.0875],[0,-0.4533,0.1167]],[[0,-0.4533,-0.1167],[0,-0.54,-0.0875],[-0.02,-0.54,0],[-0.0267,-0.4533,0]],[[0.0267,-0.4533,0],[0.02,-0.54,0],[0,-0.54,-0.0875],[0,-0.4533,-0.1167]],[[0,-0.54,0.0875],[0,-0.6267,0.0583],[0.0133,-0.6267,0],[0.02,-0.54,0]],[[-0.02,-0.54,0],[-0.0133,-0.6267,0],[0,-0.6267,0.0583],[0,-0.54,0.0875]],[[0,-0.54,-0.0875],[0,-0.6267,-0.0583],[-0.0133,-0.6267,0],[-0.02,-0.54,0]],[[0.02,-0.54,0],[0.0133,-0.6267,0],[0,-0.6267,-0.0583],[0,-0.54,-0.0875]],[[0,-0.6267,0.0583],[0,-0.7133,0.0292],[0.0067,-0.7133,0],[0.0133,-0.6267,0]],[[-0.0133,-0.6267,0],[-0.0067,-0.7133,0],[0,-0.7133,0.0292],[0,-0.6267,0.0583]],[[0,-0.6267,-0.0583],[0,-0.7133,-0.0292],[-0.0067,-0.7133,0],[-0.0133,-0.6267,0]],[[0.0133,-0.6267,0],[0.0067,-0.7133,0],[0,-0.7133,-0.0292],[0,-0.6267,-0.0583]],[[0,-0.7133,0.0292],[0.0,-0.8,0],[0.0067,-0.7133,0]],[[-0.0067,-0.7133,0],[0,-0.8,0.0],[0,-0.7133,0.0292]],[[0,-0.7133,-0.0292],[-0.0,-0.8,0],[-0.0067,-0.7133,0]],[[0.0067,-0.7133,0],[0,-0.8,-0.0],[0,-0.7133,-0.0292]]]},{"name":"fluke","material":"violet","polys":[[[0,-0.8,0],[0,-1.0,0.15],[0,-0.9,0]],[[0,-0.8,0],[0,-0.9,0],[0,-1.0,-0.15]]]},{"name":"poles","material":"pole","polys":[[[0.04,0.2211,0.0231],[0.0296,0.2206,0.029],[0.0296,0.5206,0.0572],[0.04,0.5211,0.0512]],[[0.0296,0.2206,0.029],[0.0296,0.2194,0.041],[0.0296,0.5194,0.0691],[0.0296,0.5206,0.0572]],[[0.0296,0.2194,0.041],[0.04,0.2189,0.0469],[0.04,0.5189,0.0751],[0.0296,0.5194,0.0691]],[[0.04,0.2189,0.0469],[0.0504,0.2194,0.041],[0.0504,0.5194,0.0691],[0.04,0.5189,0.0751]],[[0.0504,0.2194,0.041],[0.0504,0.2206,0.029],[0.0504,0.5206,0.0572],[0.0504,0.5194,0.0691]],[[0.0504,0.2206,0.029],[0.04,0.2211,0.0231],[0.04,0.5211,0.0512],[0.0504,0.5206,0.0572]],[[0.04,0.5211,0.0512],[0.0296,0.5206,0.0572],[0.0296,0.8206,0.0853],[0.04,0.8211,0.0793]],[[0.0296,0.5206,0.0572],[0.0296,0.5194,0.0691],[0.0296,0.8194,0.0972],[0.0296,0.8206,0.0853]],[[0.0296,0.5194,0.0691],[0.04,0.5189,0.0751],[0.04,0.8189,0.1032],[0.0296,0.8194,0.0972]],[[0.04,0.5189,0.0751],[0.0504,0.5194,0.0691],[0.0504,0.8194,0.0972],[0.04,0.8189,0.1032]],[[0.0504,0.5194,0.0691],[0.0504,0.5206,0.0572],[0.0504,0.8206,0.0853],[0.0504,0.8194,0.0972]],[[0.0504,0.5206,0.0572],[0.04,0.5211,0.0512],[0.04,0.8211,0.0793],[0.0504,0.8206,0.0853]],[[0.04,0.8211,0.0793],[0.0296,0.8206,0.0853],[0.0296,1.1206,0.1134],[0.04,1.1211,0.1074]],[[0.0296,0.8206,0.0853],[0.0296,0.8194,0.0972],[0.0296,1.1194,0.1253],[0.0296,1.1206,0.1134]],[[0.0296,0.8194,0.0972],[0.04,0.8189,0.1032],[0.04,1.1189,0.1313],[0.0296,1.1194,0.1253]],[[0.04,0.8189,0.1032],[0.0504,0.8194,0.0972],[0.0504,1.1194,0.1253],[0.04,1.1189,0.1313]],[[0.0504,0.8194,0.0972],[0.0504,0.8206,0.0853],[0.0504,1.1206,0.1134],[0.0504,1.1194,0.1253]],[[0.0504,0.8206,0.0853],[0.04,0.8211,0.0793],[0.04,1.1211,0.1074],[0.0504,1.1206,0.1134]],[[0.04,1.1211,0.1074],[0.0296,1.1206,0.1134],[0.0296,1.4206,0.1415],[0.04,1.4211,0.1356]],[[0.0296,1.1206,0.1134],[0.0296,1.1194,0.1253],[0.0296,1.4194,0.1535],[0.0296,1.4206,0.1415]],[[0.0296,1.1194,0.1253],[0.04,1.1189,0.1313],[0.04,1.4189,0.1594],[0.0296,1.4194,0.1535]],[[0.04,1.1189,0.1313],[0.0504,1.1194,0.1253],[0.0504,1.4194,0.1535],[0.04,1.4189,0.1594]],[[0.0504,1.1194,0.1253],[0.0504,1.1206,0.1134],[0.0504,1.4206,0.1415],[0.0504,1.4194,0.1535]],[[0.0504,1.1206,0.1134],[0.04,1.1211,0.1074],[0.04,1.4211,0.1356],[0.0504,1.4206,0.1415]],[[0.04,1.4211,0.1356],[0.0296,1.4206,0.1415],[0.0296,1.7206,0.1697],[0.04,1.7211,0.1637]],[[0.0296,1.4206,0.1415],[0.0296,1.4194,0.1535],[0.0296,1.7194,0.1816],[0.0296,1.7206,0.1697]],[[0.0296,1.4194,0.1535],[0.04,1.4189,0.1594],[0.04,1.7189,0.1876],[0.0296,1.7194,0.1816]],[[0.04,1.4189,0.1594],[0.0504,1.4194,0.1535],[0.0504,1.7194,0.1816],[0.04,1.7189,0.1876]],[[0.0504,1.4194,0.1535],[0.0504,1.4206,0.1415],[0.0504,1.7206,0.1697],[0.0504,1.7194,0.1816]],[[0.0504,1.4206,0.1415],[0.04,1.4211,0.1356],[0.04,1.7211,0.1637],[0.0504,1.7206,0.1697]],[[0.04,1.7211,0.1637],[0.0296,1.7206,0.1697],[0.0296,2.0206,0.1978],[0.04,2.0211,0.1918]],[[0.0296,1.7206,0.1697],[0.0296,1.7194,0.1816],[0.0296,2.0194,0.2097],[0.0296,2.0206,0.1978]],[[0.0296,1.7194,0.1816],[0.04,1.7189,0.1876],[0.04,2.0189,0.2157],[0.0296,2.0194,0.2097]],[[0.04,1.7189,0.1876],[0.0504,1.7194,0.1816],[0.0504,2.0194,0.2097],[0.04,2.0189,0.2157]],[[0.0504,1.7194,0.1816],[0.0504,1.7206,0.1697],[0.0504,2.0206,0.1978],[0.0504,2.0194,0.2097]],[[0.0504,1.7206,0.1697],[0.04,1.7211,0.1637],[0.04,2.0211,0.1918],[0.0504,2.0206,0.1978]],[[0.04,2.0211,0.1918],[0.0296,2.0206,0.1978],[0.0296,2.3206,0.2259],[0.04,2.3211,0.2199]],[[0.0296,2.0206,0.1978],[0.0296,2.0194,0.2097],[0.0296,2.3194,0.2378],[0.0296,2.3206,0.2259]],[[0.0296,2.0194,0.2097],[0.04,2.0189,0.2157],[0.04,2.3189,0.2438],[0.0296,2.3194,0.2378]],[[0.04,2.0189,0.2157],[0.0504,2.0194,0.2097],[0.0504,2.3194,0.2378],[0.04,2.3189,0.2438]],[[0.0504,2.0194,0.2097],[0.0504,2.0206,0.1978],[0.0504,2.3206,0.2259],[0.0504,2.3194,0.2378]],[[0.0504,2.0206,0.1978],[0.04,2.0211,0.1918],[0.04,2.3211,0.2199],[0.0504,2.3206,0.2259]],[[0.04,2.3211,0.2199],[0.0296,2.3206,0.2259],[0.0296,2.6206,0.254],[0.04,2.6211,0.2481]],[[0.0296,2.3206,0.2259],[0.0296,2.3194,0.2378],[0.0296,2.6194,0.266],[0.0296,2.6206,0.254]],[[0.0296,2.3194,0.2378],[0.04,2.3189,0.2438],[0.04,2.6189,0.2719],[0.0296,2.6194,0.266]],[[0.04,2.3189,0.2438],[0.0504,2.3194,0.2378],[0.0504,2.6194,0.266],[0.04,2.6189,0.2719]],[[0.0504,2.3194,0.2378],[0.0504,2.3206,0.2259],[0.0504,2.6206,0.254],[0.0504,2.6194,0.266]],[[0.0504,2.3206,0.2259],[0.04,2.3211,0.2199],[0.04,2.6211,0.2481],[0.0504,2.6206,0.254]],[[0.04,0.2189,-0.0469],[0.0296,0.2194,-0.041],[0.0296,0.5194,-0.0691],[0.04,0.5189,-0.0751]],[[0.0296,0.2194,-0.041],[0.0296,0.2206,-0.029],[0.0296,0.5206,-0.0572],[0.0296,0.5194,-0.0691]],[[0.0296,0.2206,-0.029],[0.04,0.2211,-0.0231],[0.04,0.5211,-0.0512],[0.0296,0.5206,-0.0572]],[[0.04,0.2211,-0.0231],[0.0504,0.2206,-0.029],[0.0504,0.5206,-0.0572],[0.04,0.5211,-0.0512]],[[0.0504,0.2206,-0.029],[0.0504,0.2194,-0.041],[0.0504,0.5194,-0.0691],[0.0504,0.5206,-0.0572]],[[0.0504,0.2194,-0.041],[0.04,0.2189,-0.0469],[0.04,0.5189,-0.0751],[0.0504,0.5194,-0.0691]],[[0.04,0.5189,-0.0751],[0.0296,0.5194,-0.0691],[0.0296,0.8194,-0.0972],[0.04,0.8189,-0.1032]],[[0.0296,0.5194,-0.0691],[0.0296,0.5206,-0.0572],[0.0296,0.8206,-0.0853],[0.0296,0.8194,-0.0972]],[[0.0296,0.5206,-0.0572],[0.04,0.5211,-0.0512],[0.04,0.8211,-0.0793],[0.0296,0.8206,-0.0853]],[[0.04,0.5211,-0.0512],[0.0504,0.5206,-0.0572],[0.0504,0.8206,-0.0853],[0.04,0.8211,-0.0793]],[[0.0504,0.5206,-0.0572],[0.0504,0.5194,-0.0691],[0.0504,0.8194,-0.0972],[0.0504,0.8206,-0.0853]],[[0.0504,0.5194,-0.0691],[0.04,0.5189,-0.0751],[0.04,0.8189,-0.1032],[0.0504,0.8194,-0.0972]],[[0.04,0.8189,-0.1032],[0.0296,0.8194,-0.0972],[0.0296,1.1194,-0.1253],[0.04,1.1189,-0.1313]],[[0.0296,0.8194,-0.0972],[0.0296,0.8206,-0.0853],[0.0296,1.1206,-0.1134],[0.0296,1.1194,-0.1253]],[[0.0296,0.8206,-0.0853],[0.04,0.8211,-0.0793],[0.04,1.1211,-0.1074],[0.0296,1.1206,-0.1134]],[[0.04,0.8211,-0.0793],[0.0504,0.8206,-0.0853],[0.0504,1.1206,-0.1134],[0.04,1.1211,-0.1074]],[[0.0504,0.8206,-0.0853],[0.0504,0.8194,-0.0972],[0.0504,1.1194,-0.1253],[0.0504,1.1206,-0.1134]],[[0.0504,0.8194,-0.0972],[0.04,0.8189,-0.1032],[0.04,1.1189,-0.1313],[0.0504,1.1194,-0.1253]],[[0.04,1.1189,-0.1313],[0.0296,1.1194,-0.1253],[0.0296,1.4194,-0.1535],[0.04,1.4189,-0.1594]],[[0.0296,1.1194,-0.1253],[0.0296,1.1206,-0.1134],[0.0296,1.4206,-0.1415],[0.0296,1.4194,-0.1535]],[[0.0296,1.1206,-0.1134],[0.04,1.1211,-0.1074],[0.04,1.4211,-0.1356],[0.0296,1.4206,-0.1415]],[[0.04,1.1211,-0.1074],[0.0504,1.1206,-0.1134],[0.0504,1.4206,-0.1415],[0.04,1.4211,-0.1356]],[[0.0504,1.1206,-0.1134],[0.0504,1.1194,-0.1253],[0.0504,1.4194,-0.1535],[0.0504,1.4206,-0.1415]],[[0.0504,1.1194,-0.1253],[0.04,1.1189,-0.1313],[0.04,1.4189,-0.1594],[0.0504,1.4194,-0.1535]],[[0.04,1.4189,-0.1594],[0.0296,1.4194,-0.1535],[0.0296,1.7194,-0.1816],[0.04,1.7189,-0.1876]],[[0.0296,1.4194,-0.1535],[0.0296,1.4206,-0.1415],[0.0296,1.7206,-0.1697],[0.0296,1.7194,-0.1816]],[[0.0296,1.4206,-0.1415],[0.04,1.4211,-0.1356],[0.04,1.7211,-0.1637],[0.0296,1.7206,-0.1697]],[[0.04,1.4211,-0.1356],[0.0504,1.4206,-0.1415],[0.0504,1.7206,-0.1697],[0.04,1.7211,-0.1637]],[[0.0504,1.4206,-0.1415],[0.0504,1.4194,-0.1535],[0.0504,1.7194,-0.1816],[0.0504,1.7206,-0.1697]],[[0.0504,1.4194,-0.1535],[0.04,1.4189,-0.1594],[0.04,1.7189,-0.1876],[0.0504,1.7194,-0.1816]],[[0.04,1.7189,-0.1876],[0.0296,1.7194,-0.1816],[0.0296,2.0194,-0.2097],[0.04,2.0189,-0.2157]],[[0.0296,1.7194,-0.1816],[0.0296,1.7206,-0.1697],[0.0296,2.0206,-0.1978],[0.0296,2.0194,-0.2097]],[[0.0296,1.7206,-0.1697],[0.04,1.7211,-0.1637],[0.04,2.0211,-0.1918],[0.0296,2.0206,-0.1978]],[[0.04,1.7211,-0.1637],[0.0504,1.7206,-0.1697],[0.0504,2.0206,-0.1978],[0.04,2.0211,-0.1918]],[[0.0504,1.7206,-0.1697],[0.0504,1.7194,-0.1816],[0.0504,2.0194,-0.2097],[0.0504,2.0206,-0.1978]],[[0.0504,1.7194,-0.1816],[0.04,1.7189,-0.1876],[0.04,2.0189,-0.2157],[0.0504,2.0194,-0.2097]],[[0.04,2.0189,-0.2157],[0.0296,2.0194,-0.2097],[0.0296,2.3194,-0.2378],[0.04,2.3189,-0.2438]],[[0.0296,2.0194,-0.2097],[0.0296,2.0206,-0.1978],[0.0296,2.3206,-0.2259],[0.0296,2.3194,-0.2378]],[[0.0296,2.0206,-0.1978],[0.04,2.0211,-0.1918],[0.04,2.3211,-0.2199],[0.0296,2.3206,-0.2259]],[[0.04,2.0211,-0.1918],[0.0504,2.0206,-0.1978],[0.0504,2.3206,-0.2259],[0.04,2.3211,-0.2199]],[[0.0504,2.0206,-0.1978],[0.0504,2.0194,-0.2097],[0.0504,2.3194,-0.2378],[0.0504,2.3206,-0.2259]],[[0.0504,2.0194,-0.2097],[0.04,2.0189,-0.2157],[0.04,2.3189,-0.2438],[0.0504,2.3194,-0.2378]],[[0.04,2.3189,-0.2438],[0.0296,2.3194,-0.2378],[0.0296,2.6194,-0.266],[0.04,2.6189,-0.2719]],[[0.0296,2.3194,-0.2378],[0.0296,2.3206,-0.2259],[0.0296,2.6206,-0.254],[0.0296,2.6194,-0.266]],[[0.0296,2.3206,-0.2259],[0.04,2.3211,-0.2199],[0.04,2.6211,-0.2481],[0.0296,2.6206,-0.254]],[[0.04,2.3211,-0.2199],[0.0504,2.3206,-0.2259],[0.0504,2.6206,-0.254],[0.04,2.6211,-0.2481]],[[0.0504,2.3206,-0.2259],[0.0504,2.3194,-0.2378],[0.0504,2.6194,-0.266],[0.0504,2.6206,-0.254]],[[0.0504,2.3194,-0.2378],[0.04,2.3189,-0.2438],[0.04,2.6189,-0.2719],[0.0504,2.6194,-0.266]]]},{"name":"tips","material":"copper","polys":[[[0.04,2.62,0.305],[0.085,2.62,0.26],[0.04,2.665,0.26]],[[-0.005,2.62,0.26],[0.04,2.62,0.305],[0.04,2.665,0.26]],[[0.04,2.62,0.215],[-0.005,2.62,0.26],[0.04,2.665,0.26]],[[0.085,2.62,0.26],[0.04,2.62,0.215],[0.04,2.665,0.26]],[[-0.005,2.62,0.26],[0.04,2.62,0.215],[0.04,2.575,0.26]],[[0.04,2.62,0.305],[-0.005,2.62,0.26],[0.04,2.575,0.26]],[[0.085,2.62,0.26],[0.04,2.62,0.305],[0.04,2.575,0.26]],[[0.04,2.62,0.215],[0.085,2.62,0.26],[0.04,2.575,0.26]],[[0.04,2.62,-0.215],[0.085,2.62,-0.26],[0.04,2.665,-0.26]],[[-0.005,2.62,-0.26],[0.04,2.62,-0.215],[0.04,2.665,-0.26]],[[0.04,2.62,-0.305],[-0.005,2.62,-0.26],[0.04,2.665,-0.26]],[[0.085,2.62,-0.26],[0.04,2.62,-0.305],[0.04,2.665,-0.26]],[[-0.005,2.62,-0.26],[0.04,2.62,-0.305],[0.04,2.575,-0.26]],[[0.04,2.62,-0.215],[-0.005,2.62,-0.26],[0.04,2.575,-0.26]],[[0.085,2.62,-0.26],[0.04,2.62,-0.215],[0.04,2.575,-0.26]],[[0.04,2.62,-0.305],[0.085,2.62,-0.26],[0.04,2.575,-0.26]]]}]}};
 (function () {
 // ---- util.js
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -415,7 +417,7 @@ function makeGame(physics, level, opts = {}) {
     fl: null, out: null, aP: 0, saturated: false, hardCatch: false, catches: 0, releases: 0,
     startSpeed: opts.startSpeed ?? level.start.speed, airTime: 0, apex: 0, turns: 0, passedAt: null,
     arcUntil: -1, arcs: 0, events: [], reaching: false, balance: null, assistOn: !!(level.assists && level.assists.balance),
-    crossSpanOn: false, spanHits: 0, spark: null, lastSpanHit: { k: null, t: -9 },
+    crossSpanOn: false, spanHits: 0, spark: null, lastSpanHit: { k: null, t: -9 }, curlDir: 0,
   };
   g.arcing = () => g.t < g.arcUntil;
 
@@ -447,7 +449,7 @@ function makeGame(physics, level, opts = {}) {
                          segDist(tip0, [tx, ty], ...hanger));                                // the tips' own path this step: riding into the hanger
       const sy = Math.min(Math.max(ty, 0), CS.height);
       if (d > CS.radius || (g.lastSpanHit.k === k && g.t - g.lastSpanHit.t < 0.3)) continue;
-      g.lastSpanHit = { k, t: g.t }; g.spanHits++; g.spark = { x: sx, y: sy, until: g.t + CS.spark }; g.events.push('span');
+      g.lastSpanHit = { k, t: g.t }; g.spanHits++; g.spark = { x: sx, y: sy, until: g.t + CS.spark }; g.events.push('span');   // no z: the physics has one tip point, so the drawing puts the spark on the near wire
       if (g.mode === 'wire') { g.fl = F.release(g.st, g.l, g.dl); g.mode = 'air'; g.releases++; g.airTime = 0; g.apex = g.fl.y; g.turns = 0; g.phi0 = g.fl.phi; }
       g.reaching = false;                                                  // the tips have lost the wire; a new press reaches again
       const v = Math.hypot(g.fl.vx, g.fl.vy), e = 0.5 * CS_M * v * v;
@@ -493,6 +495,10 @@ function makeGame(physics, level, opts = {}) {
       const got = F.step(g.fl, { grip: g.reaching, poleRate: g.reaching ? 0 : cmd.poleRate, spread: cmd.spread && !g.reaching, pitch: cmd.pitch }, dt);
       cmd = { ...cmd, spread: g.fl.spreadNow }; g.shown = cmd;                       // curled, she has to open before she can spread
       g.airTime += dt; g.apex = Math.max(g.apex, g.fl.y); g.turns += (g.fl.phi - phiBefore) / (2 * Math.PI);
+      // the hoop bends her the way she is spinning, latched at the step she starts to curl (change ari-solids): L > 0 turns her
+      // head forward under the tips, a forward tumble, so she tucks (chin to the fluke, −1 for the drawing); L < 0 arches her (+1)
+      if (g.fl.curl > 0 && !g.curlDir) g.curlDir = -(Math.sign(g.fl.L) || 1);
+      else if (g.fl.curl === 0) g.curlDir = 0;
       if (got) { g.reaching = false; g.st = { th: got.th, om: got.om, u: got.u, x: got.x, tPrev: 0 }; g.l = got.l; g.dl = 0; g.mode = 'wire'; g.catches++; g.hardCatch = got.hard; g.catchAlong = got.along; g.out = null; g.fl = null; }
     }
     const [hx, hy] = g.head(), tail = g.tailAngle(cmd);
@@ -613,23 +619,276 @@ function makeClock(dt, maxStepsPerFrame = 250) {
   };
 }
 
+// ---- ari_model.js
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Ari's solids (assets/ari-model, embedded as data.model) deformed by the game state, in the model's own frame: metres,
+// origin at the neck, +Y up the pole axis, +X forward (her muzzle), +Z across the street toward the viewer. No canvas
+// here, so the tests can run it. What the state does, in order:
+//   poleLen   the pole parts scale along their axis from the roots on the head (the physics shortens them before the hoop)
+//   spread    0..1 stretches the body between the paws (change ari-paper-levels): the belly flattens onto the plane through the neck
+//             and the tail root, the back keeps its depth, the rim's span grows to meta.span and tapers to nothing at the neck and the
+//             tail root, and the paws travel to the wing's corners (0, rim, ±span/2). A model with `body_spread` (the first 16) blends instead.
+//   hinge     the body and the fluke turn rigidly about the neck (about Z) by the angle between her body axis and the poles
+//   yaw       the head group turns about the pole axis: 0 faces forward, π/2 faces the viewer
+//   pitch     the head group nods about the neck (about Z, after the yaw): she looks along her course when the poles lead or trail
+//   curl      with curlDir, bends everything from the tail root to the pole tips into one ring: the body, the poles and the
+//             streamer vertex by vertex; the head group, the collar, the knot, the fluke and the tips rigidly, each riding
+//             its own point of the ring. curlDir −1 tucks her (chin toward the fluke, belly inside); +1 arches her.
+//   pupilUp   0..1 slides the pupil and the glint up the eye toward the poles (she looks at the wire while reaching)
+//   shut      picks the lid parts instead of the open eye
+// Returns faces [{ part, material, pts: [[x, y, z], ...] }], convex polygons in drawing order of the model file.
+function deform(model, state) {
+  const M = model.meta, LB = M.LB, Y0 = M.poleRootY;
+  const l = state.poleLen ?? M.poleLong, spread = state.spread ?? 0, yaw = state.yaw ?? 0, curl = state.curl ?? 0, dir = state.curlDir || 1, hinge = (state.hinge ?? 0) * (1 - curl), pitch = (state.pitch ?? 0) * (1 - curl);   // curled she is narrow and in line: the hinges fade out
+  const kappa = (dir * curl * 2 * Math.PI) / (LB + Y0 + l);                                 // the ring closes at full curl: tail root to pole tips is one circumference
+  const bend = Math.abs(kappa) < 1e-9 ? (x, y, z) => [x, y, z]
+    : (x, y, z) => { const R = 1 / kappa, th = kappa * y; return [-R + (x + R) * Math.cos(th), (x + R) * Math.sin(th), z]; };
+  const rigid = (x, y, z, ya) => { if (Math.abs(kappa) < 1e-9) return [x, y, z]; const th = kappa * ya, c = bend(0, ya, 0), dy = y - ya; return [c[0] + x * Math.cos(th) - dy * Math.sin(th), c[1] + x * Math.sin(th) + dy * Math.cos(th), z]; };
+  const cy = Math.cos(yaw), sy = Math.sin(yaw), ch = Math.cos(hinge), sh = Math.sin(hinge), cp = Math.cos(pitch), spn = Math.sin(pitch);
+  const head = new Set(M.head), eye = new Set(M.eye), shutParts = new Set(M.shut), scale = l / M.poleLong, pupilUp = 0.018 * (state.pupilUp ?? 0);
+  const wide = model.parts.find((p) => p.name === 'body_spread'), stretchParts = new Set(M.stretch || []);
+  const RIM = M.rim, bu = M.rimHalf ? M.rimHalf[0] : 0.12, bc = M.rimHalf ? M.rimHalf[1] : 0.12, span = M.span ?? 0.35, tips = M.pawTips || [];
+  const share = (y) => (y >= RIM ? y / RIM : (y + LB) / (RIM + LB));   // 0 at the neck and the tail root, 1 at the rim
+  const out = [];
+  for (const p of model.parts) {
+    const name = p.name;
+    if (name === 'body_spread') continue;                                                     // drawn through body_narrow, blended
+    if (state.shut ? eye.has(name) : shutParts.has(name)) continue;
+    const polys = p.polys;
+    for (let i = 0; i < polys.length; i++) {
+      const src = polys[i], pts = new Array(src.length);
+      for (let k = 0; k < src.length; k++) {
+        let [x, y, z] = src[k];
+        if (name === 'body_narrow' && spread > 0 && wide) { const w = wide.polys[i][k]; x += (w[0] - x) * spread; y += (w[1] - y) * spread; z += (w[2] - z) * spread; }
+        else if (spread > 0 && stretchParts.has(name)) {
+          if (name === 'body') { const f = share(y); if (x > 0) x *= 1 - spread; z *= 1 + spread * (span / 2 / bc - 1) * f; }   // the belly half onto the plane, the back untouched, the span at the rim
+          else { const t = z >= 0 ? tips[0] : tips[1]; if (t) { const sg = Math.sign(z), fx = 0, fy = RIM + 0.6 * (y - t[1]), fz = sg * (span / 2 - 0.6 * Math.abs(z - t[2])); x += spread * (fx - x); y += spread * (fy - y); z += spread * (fz - z); } }   // a paw rides to its corner: a flat flap inside the wing, its tip at the corner
+        }
+        if (name === 'body_narrow' || name === 'body' || name === 'fluke' || name === 'paws' || name === 'pads') { const xr = x * ch - y * sh, yr = x * sh + y * ch; x = xr; y = yr; }   // the neck hinge, before the bend
+        if (pupilUp && (name === 'pupil' || name === 'glint')) y += pupilUp;
+        if (head.has(name)) { const xr = x * cy - z * sy, zr = x * sy + z * cy, xp = xr * cp - y * spn, yp = xr * spn + y * cp; pts[k] = rigid(xp, yp, zr, M.headAnchorY); }   // yaw π/2 turns +X (the muzzle) to +Z (the viewer); then the nod about the neck
+        else if (name === 'poles') pts[k] = bend(x, Y0 + (y - Y0) * scale, z);
+        else if (name === 'tips') pts[k] = rigid(x, y - (M.poleLong - l), z, Y0 + l);
+        else if (name in M.anchors) pts[k] = rigid(x, y, z, name === 'fluke' ? M.anchors.fluke : M.anchors[name]);
+        else if (name === 'paws' || name === 'pads') pts[k] = rigid(x, y, z, RIM);
+        else pts[k] = bend(x, y, z);
+      }
+      out.push({ part: name === 'body_narrow' ? 'body' : name, material: p.material, pts });
+    }
+  }
+  return out;
+}
+
+/** The fluke's root and the pole tips' meeting point after deformation, for tests and the harness. */
+function landmarks(model, state) {
+  const M = model.meta, l = state.poleLen ?? M.poleLong, faces = deform(model, state);
+  const fluke = faces.filter((f) => f.part === 'fluke'), tips = faces.filter((f) => f.part === 'tips');
+  const mean = (fs) => { let x = 0, y = 0, z = 0, n = 0; for (const f of fs) for (const p of f.pts) { x += p[0]; y += p[1]; z += p[2]; n++; } return [x / n, y / n, z / n]; };
+  return { flukeRoot: fluke.length ? fluke[0].pts[0] : null, tips: mean(tips), poleLen: l };
+}
+
+// ---- skin.js
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Skins on the recipe model (change ari-skin): a generated mesh (data/ari_skin_*.json, made by assets/ari-skin/build_skin.py)
+// follows deform() the way a skin follows a skeleton. Every face of the deformed recipe model is a bone with its own frame:
+// its centroid, its first and last edges from the first corner, and its normal scaled by the square root of its area, so
+// the frame carries the face's rigid move, the bend and the spread's stretch alike. A skin vertex is bound once, at its
+// skin's rest state, to the K nearest faces (weights by the inverse square of the distance, summing to 1) and stored in
+// each face's rest frame; per frame it is the weighted sum of where those frames put it (linear blend skinning with faces
+// as bones). Bones are addressed by part and polygon index in deform()'s output, which is stable for a state's eye flag;
+// the bones are always taken with the eye open. A face too thin at rest (the paws and the belly crushed flat at full
+// spread) is no bone, and a vertex skips a bone it would sit more than L_MAX of that bone's frame units from: both make
+// near-singular frames whose motion flings far vertices away. The neck hinge alone is not blended: the bones are taken at
+// the skin's rest hinge and each vertex turns about the neck by a share set by how far below the neck it sits (NECK), so
+// the flier's body follows the game's hinge as one piece. No canvas here, so the tests can run it. No part gates; see
+// openspec/changes/archive/2026-10-24-ari-skin/design.md.
+
+
+const K = 4, EPS = 0.01;                                              // faces per vertex; m, softens the weight of a face the vertex lies on
+const THIN = 0.05, L_MAX = 6;                                         // a bone's area over its two edges' product at least this; a vertex at most L_MAX frame units from a bone
+const NO_BONE = new Set(['poles', 'tips', 'streamer', 'lid', 'eyelid']); // strokes, and the shut eye
+const NECK = 0.2;                                                     // m below the neck over which a skin vertex takes up the hinge
+
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const d2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+
+/** A face's frame: centroid c and the columns e1, e2, n of M. null if the face is too small or too thin to be a bone. */
+function faceFrame(pts) {
+  const n = pts.length, c = [0, 0, 0];
+  for (const p of pts) { c[0] += p[0] / n; c[1] += p[1] / n; c[2] += p[2] / n; }
+  const e1 = sub(pts[1], pts[0]), e2 = sub(pts[n - 1], pts[0]), x = cross(e1, e2), a = Math.hypot(x[0], x[1], x[2]);
+  if (a < 1e-8 || a / (Math.hypot(...e1) * Math.hypot(...e2)) < THIN) return null;
+  const s = Math.sqrt(a) / a;
+  return { c, M: [e1, e2, [x[0] * s, x[1] * s, x[2] * s]] };
+}
+
+/** v in the frame's coordinates: M⁻¹ (v − c), by Cramer's rule on the columns. */
+function local(f, v) {
+  const [a, b, n] = f.M, r = sub(v, f.c), det = dot(a, cross(b, n));
+  return [dot(r, cross(b, n)) / det, dot(a, cross(r, n)) / det, dot(a, cross(b, r)) / det];
+}
+
+/** Squared distance from p to triangle abc (Ericson, Real-Time Collision Detection 5.1.5). */
+function pointTri(p, a, b, c) {
+  const ab = sub(b, a), ac = sub(c, a), ap = sub(p, a), d1 = dot(ab, ap), d2_ = dot(ac, ap);
+  if (d1 <= 0 && d2_ <= 0) return d2(p, a);
+  const bp = sub(p, b), d3 = dot(ab, bp), d4 = dot(ac, bp);
+  if (d3 >= 0 && d4 <= d3) return d2(p, b);
+  const vc = d1 * d4 - d3 * d2_;
+  if (vc <= 0 && d1 >= 0 && d3 <= 0) { const v = d1 / (d1 - d3); return d2(p, [a[0] + v * ab[0], a[1] + v * ab[1], a[2] + v * ab[2]]); }
+  const cp = sub(p, c), d5 = dot(ab, cp), d6 = dot(ac, cp);
+  if (d6 >= 0 && d5 <= d6) return d2(p, c);
+  const vb = d5 * d2_ - d1 * d6;
+  if (vb <= 0 && d2_ >= 0 && d6 <= 0) { const w = d2_ / (d2_ - d6); return d2(p, [a[0] + w * ac[0], a[1] + w * ac[1], a[2] + w * ac[2]]); }
+  const va = d3 * d6 - d5 * d4;
+  if (va <= 0 && d4 - d3 >= 0 && d5 - d6 >= 0) { const w = (d4 - d3) / (d4 - d3 + (d5 - d6)); return d2(p, [b[0] + w * (c[0] - b[0]), b[1] + w * (c[1] - b[1]), b[2] + w * (c[2] - b[2])]); }
+  const den = 1 / (va + vb + vc), v = vb * den, w = vc * den;
+  return d2(p, [a[0] + ab[0] * v + ac[0] * w, a[1] + ab[1] * v + ac[1] * w, a[2] + ab[2] * v + ac[2] * w]);
+}
+
+const polyDist = (p, pts) => { let best = Infinity; for (let i = 1; i < pts.length - 1; i++) best = Math.min(best, pointTri(p, pts[0], pts[i], pts[i + 1])); return Math.sqrt(best); };
+
+/** The bones of deformed faces: { key: 'part:index', part, pts } for every face that may carry a skin. */
+function bones(faces) {
+  const out = [], count = {};
+  for (const f of faces) { const i = count[f.part] = (count[f.part] ?? -1) + 1; if (!NO_BONE.has(f.part)) out.push({ key: f.part + ':' + i, part: f.part, pts: f.pts }); }
+  return out;
+}
+
+/** Bind a skin file to a recipe model at the skin's rest state (skin.meta.rest unless given). */
+function bindSkin(model, skin, rest = skin.meta.rest) {
+  const all = bones(deform(model, { ...rest, shut: false })).map((b) => ({ ...b, f: faceFrame(b.pts) })).filter((b) => b.f);
+  const used = new Map(), binds = skin.verts.map((v) => {
+    const byDist = all.map((b) => [polyDist(v, b.pts), b]).sort((a, b) => a[0] - b[0]), near = [];
+    for (const nb of byDist) { if (Math.max(...local(nb[1].f, v).map(Math.abs)) <= L_MAX) near.push(nb); if (near.length === K) break; }
+    if (!near.length) near.push(byDist[0]);                                                            // nothing within reach: the nearest face alone
+    let sum = 0; const ws = near.map(([d]) => { const w = 1 / (d + EPS) ** 2; sum += w; return w; });
+    return near.map(([, b], j) => { used.set(b.key, b); return { key: b.key, w: ws[j] / sum, l: local(b.f, v) }; });
+  });
+  return { skin, model, rest, keys: [...used.keys()], binds, hinged: hingeShare(skin, rest) };
+}
+
+/** Each vertex's share of the neck hinge, from where it sits, not from its bones: with the rest hinge undone the body hangs
+ *  below the neck along −Y, so a vertex above the neck takes none of the hinge, one more than NECK below it all, and the
+ *  band between bends (a smoothstep). The flier's belly and chest lie nearest the collar and paw faces of the flat wing
+ *  skeleton, so shares taken from the bones split its body along the belly and tore it. */
+function hingeShare(skin, rest) {
+  const h0 = rest.hinge ?? 0, s = Math.sin(-h0), c = Math.cos(-h0);
+  return skin.verts.map(([x, y]) => { const u = Math.min(Math.max(-(x * s + y * c) / NECK, 0), 1); return u * u * (3 - 2 * u); });
+}
+
+/** The skin's triangles where the deformed faces put them: [{ part, material, pts }], in the shape of deform()'s faces.
+ *  The hinge is not blended: the bones are taken at the binding's rest hinge, and each vertex then turns about the neck
+ *  by its share of the hinge change (hingeShare). Blended, a turned body frame and an unturned collar frame smeared the
+ *  flier's body and wing out to the side once the game's hinge left the −90° it was bound at (in flight it runs from
+ *  about −150° to +110°).
+ *  faces: deform(model, state at the rest hinge) with the eye open; pass it in when the caller has it already. */
+function evalSkin(binding, state, faces) {
+  const h0 = binding.rest.hinge ?? 0, dh = ((state.hinge ?? 0) - h0) * (1 - (state.curl ?? 0));   // as deform() scales the hinge by the curl
+  faces = faces || deform(binding.model, { ...state, hinge: h0, shut: false });
+  const want = new Set(binding.keys), frames = new Map();
+  for (const b of bones(faces)) if (want.has(b.key)) frames.set(b.key, faceFrame(b.pts) || { c: b.pts[0], M: [[0, 0, 0], [0, 0, 0], [0, 0, 0]] });
+  const P = binding.binds.map((bs, i) => {
+    const p = [0, 0, 0];
+    for (const { key, w, l } of bs) {
+      const { c, M } = frames.get(key);
+      for (let k = 0; k < 3; k++) p[k] += w * (c[k] + M[0][k] * l[0] + M[1][k] * l[1] + M[2][k] * l[2]);
+    }
+    const a = dh * binding.hinged[i];
+    if (a) { const ca = Math.cos(a), sa = Math.sin(a), x = p[0]; p[0] = x * ca - p[1] * sa; p[1] = x * sa + p[1] * ca; }
+    return p;
+  });
+  const { tris, material, part } = binding.skin;
+  return tris.map((t, i) => ({ part: part[i], material: material[i], pts: [P[t[0]], P[t[1]], P[t[2]]] }));
+}
+
+/** The binding to draw at a spread: the one whose rest spread is nearest, the later one on a tie (so at 0.5 the flier). */
+function pickSkin(bindings, spread) {
+  let best = null, bd = Infinity;
+  for (const b of bindings) { const d = Math.abs((b.rest.spread ?? 0) - spread); if (d <= bd) { bd = d; best = b; } }
+  return best;
+}
+
+/** The hang-fly pair (design decision 3a): each skin bound twice, its own shape at its own rest and its morph (the other
+ *  skin's shape, made by tools/skin_morph.mjs) at the other's rest. Four bindings, made once. */
+function bindPair(model, hanging, flying) {
+  const as = (skin, verts) => ({ ...skin, verts });
+  return {
+    hanging: [bindSkin(model, hanging), bindSkin(model, as(hanging, hanging.morph.verts), flying.meta.rest)],
+    flying: [bindSkin(model, as(flying, flying.morph.verts), hanging.meta.rest), bindSkin(model, flying)],
+    rest: [hanging.meta.rest, flying.meta.rest],
+  };
+}
+
+/** The pair's triangles for a state: t = smoothstep(spread) blends the hanging-side shape (the skeleton at the hanging rest
+ *  spread) into the flier-side shape (at the flier's), every other part of the state from the skeleton; the hanging mesh
+ *  below t = 0.5, the flier's from it on. Returns the triangles, with `mesh` and `t` on the array for the viewer. */
+function evalPair(pair, state) {
+  const s = Math.min(Math.max(state.spread ?? 0, 0), 1), t = s * s * (3 - 2 * s), [b0, b1] = t < 0.5 ? pair.hanging : pair.flying;
+  const st = state.turned ? { ...state, hinge: -(state.hinge ?? 0), yaw: -(state.yaw ?? 0), pitch: -(state.pitch ?? 0), curlDir: -(state.curlDir || 1) } : state;
+  const A = evalSkin(b0, { ...st, spread: pair.rest[0].spread }), B = evalSkin(b1, { ...st, spread: pair.rest[1].spread });
+  const out = A.map((tri, i) => ({ part: tri.part, material: tri.material, pts: tri.pts.map((p, k) => { const q = B[i].pts[k], r = [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t]; return state.turned ? [-r[0], r[1], -r[2]] : r; }) }));
+  out.mesh = t < 0.5 ? 'hanging' : 'flying'; out.t = t;
+  return out;
+}
+
+/** Whether to draw the pair turned about her pole axis (design 2c): half a turn about +Y shows a body at hinge h as one at −h,
+ *  in the same place on the side view, so the flier is drawn whichever way puts it nearer its rest hinge; her face then
+ *  leads and her body trails, also when the poles point down to the wire under her. TURN of margin either way, so she
+ *  does not flicker about her pole axis while the body passes along it. `was` is the last frame's answer. */
+const TURN = 0.7;                                                     // rad, of the difference between the two distances to the rest hinge
+function turnedFor(pair, hinge, was) {
+  const h1 = pair.rest[1].hinge ?? 0, keep = Math.abs(wrapPi(hinge - h1)), turn = Math.abs(wrapPi(-hinge - h1));
+  return was ? !(keep < turn - TURN) : turn < keep - TURN;
+}
+
 // ---- render.js
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Side view, to scale, on a canvas. Drawing code descends from the Roping Ari animation pages
-// (radio_ocean/notes/scenes/ari-roping): dusk sky, far skyline, road, supports, the two wires, the
-// trolleybus with its poles on them, and Ari with her poles, body form, flare streaks.
+// (art/scenes/ari-roping): dusk sky, far skyline, road, supports, the two wires, the trolleybus with its
+// poles on them, and Ari. Since change ari-solids (2026-10-08) Ari is her low-poly solids model (assets/ari-model,
+// data.model) deformed by the game state (ari_model.js) and drawn in a cabinet projection: the world stays a side view,
+// and the across-the-street axis gets one fixed screen direction, SLANT, which the two wires share. Declared aesthetic
+// choices: the slant (near goes down-left, half scale), the light from upper-left-front and the tone formula, the 0.15 s
+// spread ramp, the gaze beats (the glance at the player on the first frame, after a catch, on the win, at a paused demo
+// moment), the eye shutting above 0.8 turns a second, the scarf's flutter numbers, the flare streaks.
 
-function makeRenderer(canvas, world, physics) {
+
+
+const SLANT = [-0.433, 0.25];                 // screen px per metre of near depth, times the scale; +y is down on screen
+const LIGHT = (() => { const v = [-0.4, 0.6, 0.7], n = Math.hypot(...v); return v.map((c) => c / n); })();
+const TO_VIEWER = [-SLANT[0], SLANT[1], 1];           // a face is seen when its world normal has a positive component along this
+const BIAS = { eye_white: 0.3, iris: 0.31, pupil: 0.32, glint: 0.33, lid: 0.3, eyelid: 0.31, ears: 0.05, collar: 0.02, knot: 0.06 };
+const GLANCE = { up: 0.25, hold: 0.6, down: 0.25 };   // s, real time
+const SHUT_ABOVE = 2 * Math.PI * 0.8, OPEN_BELOW = 2 * Math.PI * 0.5, EYE_MIN = 0.1;   // rad/s and s
+const NOD = 0.7;                                     // rad, how far the head may nod about the neck to look along her course
+
+/** clock: seconds of real time for the ramps and beats; the harness drives it by hand since headless browsers hold virtual time still. */
+function makeRenderer(canvas, world, physics, modelIn, clock = () => (typeof performance !== 'undefined' ? performance.now() : Date.now()) / 1000) {
   const ctx = canvas.getContext('2d');
   const WIRE_H = world.WIRE_H, LB = physics.body.length, B = physics.bus;
+  let model, WZ, Y0, pair = null;
+  /** Swap her model (the paper page's selector): its meta, and for a skinned model (change ari-skin) the hang-fly pair, bound once here. */
+  function setModel(m) { model = m; WZ = m.meta.wireZ; Y0 = m.meta.poleRootY; pair = m.skins ? bindPair(m, m.skins.hanging, m.skins.flying) : null; mixed.clear(); }
   let W = 0, H = 0, S = 1, camX = 0, viewH = 11.6, C = {};
-  const tokens = ['ground', 'panel', 'ink', 'muted', 'violet', 'rust', 'copper', 'cream', 'amber', 'sky1', 'sky2', 'city', 'road', 'bus', 'glass', 'pole'];
-  function readTokens() { const cs = getComputedStyle(document.documentElement); for (const k of tokens) C[k] = cs.getPropertyValue('--' + k).trim(); }
+  const tokens = ['ground', 'panel', 'ink', 'muted', 'violet', 'rust', 'copper', 'cream', 'amber', 'sky1', 'sky2', 'city', 'road', 'bus', 'glass', 'pole', 'blush'];
+  const mixed = new Map(); setModel(modelIn);
+  function readTokens() { const cs = getComputedStyle(document.documentElement); for (const k of tokens) C[k] = cs.getPropertyValue('--' + k).trim(); mixed.clear(); }
+  /** The token colour moved toward white (t > 0) or black (t < 0), cached per 1/40 step. */
+  function mix(name, t) {
+    const q = Math.round(clamp(t, -0.6, 0.6) * 40), key = name + q; let c = mixed.get(key);
+    if (c) return c;
+    const h = C[name] || '', ok = /^#[0-9a-f]{6}$/i.test(h), v = ok ? [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)) : [128, 128, 128], f = q / 40;
+    c = `rgb(${v.map((x) => Math.round(f >= 0 ? x + (255 - x) * f : x * (1 + f))).join(',')})`; mixed.set(key, c); return c;
+  }
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2), r = canvas.getBoundingClientRect();
     W = r.width; H = r.height; canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
   const X = (x) => (x - camX) * S + W * 0.38, Y = (y) => H - (WIRE_H + y + 0.9) * S;
+  const Xz = (x, z) => X(x) + SLANT[0] * z * S, Yz = (y, z) => Y(y) + SLANT[1] * z * S;        // with an across-the-street offset
   const line = (x1, y1, x2, y2, col, w, dash) => { ctx.beginPath(); ctx.setLineDash(dash || []); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.stroke(); ctx.setLineDash([]); };
 
   function drawWorld(game) {
@@ -648,83 +907,128 @@ function makeRenderer(canvas, world, physics) {
       const sx = X(k * world.SPAN + 10);
       line(sx, Y(-WIRE_H), sx, Y(1.1), C.muted, Math.max(2, 0.14 * S));
       if (!world.broken.has(k)) { line(sx - 0.5 * S, Y(0.55), sx + 0.5 * S, Y(0.55), C.muted, 1.5);   // the cross-span, seen end-on; gone once snapped
-        if (game && game.crossSpanOn) { line(sx, Y(0.55), sx, Y(0), C.ink, 1.5); line(sx - 0.08 * S, Y(0.02), sx + 0.08 * S, Y(0.02), C.ink, 3); } }   // the hanger down to its clamp on the wire, a hazard with C on
+        if (game && game.crossSpanOn) for (const z of [-WZ, WZ]) { const hx = Xz(k * world.SPAN + 10, z); line(hx, Yz(0.55, z), hx, Yz(0, z), z < 0 ? C.muted : C.ink, 1.5); line(hx - 0.08 * S, Yz(0.02, z), hx + 0.08 * S, Yz(0.02, z), z < 0 ? C.muted : C.ink, 3); } }   // a hanger down to its clamp on each wire, a hazard with C on
       else { line(sx - 0.5 * S, Y(0.55), sx - 0.12 * S, Y(0.2), C.muted, 1.2); line(sx + 0.5 * S, Y(0.55), sx + 0.15 * S, Y(0.15), C.muted, 1.2); }
     }
-    line(0, Y(0.12), W, Y(0.12), C.muted, 1); line(0, Y(0), W, Y(0), C.ink, 1.6);
+    // the two contact wires, 0.52 m apart across the street: the far one higher on screen by the slant, and lighter
+    line(0, Yz(0, -WZ), W, Yz(0, -WZ), C.muted, 1.2); line(0, Yz(0, WZ), W, Yz(0, WZ), C.ink, 1.6);
     const g = world.geom();
     if (world.bus.on && X(g.front) > -50 && X(g.shoes) < W + 50) {
       const yb = Y(g.floorY), yr = Y(g.roofY), bh = yb - yr;
+      const busPole = (z) => { const col = z < 0 ? C.muted : C.ink; ctx.fillStyle = z < 0 ? mix('pole', 0.3) : C.pole; ctx.fillRect(Xz(g.rear + 3.6, z), yr - 0.22 * S, 2.2 * S, 0.22 * S);   // base on the roof, pole to its shoe on its wire
+        line(Xz(g.poleBase, z), yr - 0.2 * S, Xz(g.shoes, z), Yz(0.02, z), col, 2); ctx.fillStyle = col; ctx.fillRect(Xz(g.shoes, z) - 3, Yz(0, z) - 1, 7, 4); };
+      busPole(-WZ);
       ctx.fillStyle = C.bus; ctx.beginPath(); ctx.roundRect(X(g.rear), yr, B.length * S, bh, [0.25 * S, 0.7 * S, 0.1 * S, 0.1 * S]); ctx.fill();
       ctx.fillStyle = C.glass; ctx.fillRect(X(g.rear + 0.5), yr + bh * 0.2, (B.length - 1.3) * S, bh * 0.34);
       ctx.fillStyle = C.bus; for (let q = 1; q < 6; q++) ctx.fillRect(X(g.rear + 0.5 + (q * (B.length - 1.3)) / 6), yr + bh * 0.2, Math.max(1, 0.08 * S), bh * 0.34);
       ctx.fillStyle = C.pole; for (const wx of [g.rear + 2.6, g.front - 2.4]) { ctx.beginPath(); ctx.arc(X(wx), Y(-WIRE_H + 0.5), 0.5 * S, 0, 7); ctx.fill(); }
       ctx.fillStyle = C.rust; ctx.fillRect(X(g.rear) - 1, yr + bh * 0.66, Math.max(2, 0.1 * S), bh * 0.12);
-      ctx.fillStyle = C.pole; ctx.fillRect(X(g.rear + 3.6), yr - 0.22 * S, 2.2 * S, 0.22 * S);
-      line(X(g.poleBase), yr - 0.2 * S, X(g.shoes), Y(0.02), C.ink, 2); line(X(g.poleBase + 0.1), yr - 0.2 * S, X(g.shoes + 0.1), Y(0.13), C.muted, 1.4);
-      ctx.fillStyle = C.ink; ctx.fillRect(X(g.shoes) - 3, Y(0) - 1, 7, 4);
+      busPole(WZ);
     }
   }
 
-  function drawAri(game, cmd, ghost) {
-    const [hx, hy] = game.head(), [tx, ty] = game.tips(), tail = game.tailAngle(cmd);
-    const spread = cmd && cmd.spread, flare = spread ? clamp((cmd.pitch - 0.6) / 0.6, 0, 1) : 0;
-    ctx.globalAlpha = ghost ? 0.35 : 1;
-    // poles: dark with rust bands, bowed when they push; curled, poles and body bend into one closed ring
-    const push = game.mode === 'wire' && game.out ? clamp(-game.out.tension / 60, 0, 1) : 0;
-    const l = game.poleLength(), curl = game.mode === 'air' && game.fl ? game.fl.curl || 0 : 0, cs = curl * curl * (3 - 2 * curl);
-    const chain = (x, y, dir, len, kappa, n) => { const pts = [[x, y]], du = len / n; for (let j = 0; j < n; j++) { const a = dir + kappa * (j + 0.5) * du; x += Math.cos(a) * du; y += Math.sin(a) * du; pts.push([x, y]); } return pts; };
-    let polePts, bodyPts = null, ox = 0, oy = 0;
-    if (cs > 0.001) {
-      const kappa = (cs * 2 * Math.PI) / (l + LB), phi = game.fl.phi;
-      polePts = chain(hx, hy, phi, l, kappa, 18); bodyPts = chain(hx, hy, phi + Math.PI, LB, -kappa, 12);
-      const all = polePts.concat(bodyPts); ox = cs * (all.reduce((a, p) => a + p[0], 0) / all.length - hx); oy = cs * (all.reduce((a, p) => a + p[1], 0) / all.length - hy);
-      for (const p of all) { p[0] -= ox; p[1] -= oy; }                       // her centre, not her head, follows the flight path
-    } else {
-      const nx = -(ty - hy) / l, ny = (tx - hx) / l, sag = 0.3 * l * push * (ny > 0 ? 1 : -1), cx = (hx + tx) / 2 + nx * sag * 2, cy = (hy + ty) / 2 + ny * sag * 2;
-      polePts = []; for (let j = 0; j <= 18; j++) { const q = j / 18; polePts.push([(1 - q) * (1 - q) * hx + 2 * q * (1 - q) * cx + q * q * tx, (1 - q) * (1 - q) * hy + 2 * q * (1 - q) * cy + q * q * ty]); }
-    }
-    const pole = (col, dash) => { ctx.beginPath(); ctx.setLineDash(dash || []); polePts.forEach((p, j) => (j ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])))); ctx.strokeStyle = col; ctx.lineWidth = Math.max(2.4, 0.075 * S); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); ctx.setLineDash([]); ctx.lineCap = 'butt'; };
-    pole(C.pole); pole(C.rust, [0.05 * S, 0.3 * S]);
-    const [tipX, tipY] = polePts[polePts.length - 1], hX = hx - ox, hY = hy - oy;
-    ctx.fillStyle = C.copper; ctx.beginPath(); ctx.arc(X(tipX), Y(tipY), Math.max(3, 0.1 * S), 0, 7); ctx.fill();
-    if (game.mode === 'wire') { ctx.strokeStyle = C.amber; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(X(tipX), Y(tipY), Math.max(5, 0.17 * S), 0, 7); ctx.stroke(); }
+  // ---- Ari: the renderer's own slow state (ramps and beats), kept across frames
+  const ari = { spread: 0, pitch: 0, shut: false, eyeSince: -1, glance: null, glanceAt: -9, catches: 0, won: false, t0: null, lastT: -1, now: 0, lastNow: null, turned: false };
+  const glanceYaw = (now) => {                       // 0..π/2 over the glance's timeline, 0 when none is running
+    if (ari.glanceHold) return Math.PI / 2;                                                 // the harness holds the stare
+    if (ari.glance == null) return 0; const e = now - ari.glance;
+    if (e < GLANCE.up) return (Math.PI / 2) * smooth(e / GLANCE.up);
+    if (e < GLANCE.up + GLANCE.hold) return Math.PI / 2;
+    if (e < GLANCE.up + GLANCE.hold + GLANCE.down) return (Math.PI / 2) * smooth(1 - (e - GLANCE.up - GLANCE.hold) / GLANCE.down);
+    ari.glance = null; return 0;
+  };
+  function beats(game, paused, marks, now) {       // when she glances at the player (declared aesthetic choices)
+    let glance = false;
+    if (game.t < 1e-9 && ari.lastT > 1e-9) ari.t0 = null;                                    // a restart
+    if (ari.t0 == null) { ari.t0 = now; glance = true; }                                     // the first frame of a run
+    if (game.catches > ari.catches) glance = true; ari.catches = game.catches;
+    if (game.won && !ari.won) glance = true; ari.won = !!game.won;
+    if (paused && marks && marks.some((m) => m.current) && now - ari.glanceAt > 3) glance = true;   // a demo held at a moment
+    if (glance && ari.glance == null && now - ari.glanceAt > 1.5) { ari.glance = now; ari.glanceAt = now; }
+    ari.lastT = game.t;
+  }
+  function eyeState(game, now) {                    // shut while curled or spinning fast, open again slower; never for less than EYE_MIN
+    const spin = game.mode === 'air' && game.fl ? Math.abs(game.F.spin(game.fl)) : 0, curled = game.mode === 'air' && !!game.fl && game.fl.curl > 0.5;
+    const want = curled || spin > SHUT_ABOVE ? true : spin < OPEN_BELOW && !curled ? false : ari.shut;
+    if (want !== ari.shut && (ari.eyeSince < 0 || now - ari.eyeSince >= EYE_MIN)) { ari.shut = want; ari.eyeSince = now; }
+    return ari.shut;
+  }
+  const poleDir = (game) => { if (game.mode !== 'wire') return game.fl.phi; const [hx, hy] = game.head(), [tx, ty] = game.tips(); return Math.atan2(ty - hy, tx - hx); };
+
+  function drawAri(game, cmd, paused, marks) {
+    const now = ari.now, dtReal = ari.lastNow == null ? 0 : clamp(now - ari.lastNow, 0, 0.1); ari.lastNow = now;
+    const [hx, hy] = game.head(), tail = game.tailAngle(cmd), pa = poleDir(game);
+    const spreadWant = cmd && cmd.spread ? 1 : 0; ari.spread += clamp(spreadWant - ari.spread, -dtReal / 0.15, dtReal / 0.15);
+    const flare = cmd && cmd.spread ? clamp((cmd.pitch - 0.6) / 0.6, 0, 1) : 0;
+    const l = game.poleLength(), curl = game.mode === 'air' && game.fl ? game.fl.curl || 0 : 0, curlDir = game.curlDir || 1;
+    beats(game, paused, marks, now);
+    const yaw = glanceYaw(now), shut = eyeState(game, now), hinge = wrapPi(tail - pa - Math.PI);
+    // a skinned flier is drawn turned about her pole axis when that puts its body nearer the hinge it was made at (ari-skin 2c): face first, body trailing, also with the poles down to the wire under her
+    ari.turned = !!pair && ari.spread >= 0.5 && turnedFor(pair, hinge, ari.turned);
+    // she looks along her course: the head nods about the neck toward it, up to NOD, fully on the wire and fading with her spin in the air
+    const [vx0, vy0] = game.velocity(), spin = game.mode === 'air' && game.fl ? Math.abs(game.F.spin(game.fl)) : 0, weight = game.mode === 'wire' ? 1 : clamp(1 - spin / OPEN_BELOW, 0, 1);
+    const nodWant = Math.hypot(vx0, vy0) > 1 ? clamp(wrapPi(Math.atan2(vy0, vx0) - (pa + (ari.turned ? 1 : -1) * Math.PI / 2)), -NOD, NOD) * weight : 0;
+    ari.pitch += (nodWant - ari.pitch) * clamp(dtReal / 0.12, 0, 1);
+    const st = { poleLen: l - Y0, spread: ari.spread, hinge, turned: ari.turned, yaw, pitch: ari.pitch, curl, curlDir, shut, pupilUp: game.reaching ? 1 : 0 };
+    const faces = pair ? evalPair(pair, st) : deform(model, st);   // a skinned model: the skin's triangles, the spread by the precalculated morph (ari-skin)
+    // model → world: +Y along the poles, +X its right-hand normal (forward along the wire when the poles stand up), +Z toward the viewer.
+    // Curled, her centre and not her head follows the flight path: the ring's centre is moved onto the head point as she closes.
+    const px = Math.cos(pa), py = Math.sin(pa), fx = py, fy = -px;
+    const kappa = (curlDir * curl * 2 * Math.PI) / (LB + l), shift = kappa ? smooth(curl) / kappa : 0;   // the ring's centre is at (−1/κ, 0) in model space
+    const toWorld = (p) => [hx + (p[0] + shift) * fx + p[1] * px, hy + (p[0] + shift) * fy + p[1] * py, p[2]];
+    const screen = (w) => [Xz(w[0], w[2]), Yz(w[1], w[2])];
+    // the poles as strokes along their deformed axes, with rust bands and copper tips: the far one first, the near one over her
+    const R = kappa ? 1 / kappa : 0, bendPt = (x, y, z) => (kappa ? [-R + (x + R) * Math.cos(kappa * y), (x + R) * Math.sin(kappa * y), z] : [x, y, z]);
+    const nod = ari.pitch * (1 - curl), r0 = ari.turned ? -0.04 : 0.04, rx = r0 * Math.cos(nod) - Y0 * Math.sin(nod), ry = r0 * Math.sin(nod) + Y0 * Math.cos(nod);   // the roots ride the nodded head's top (on her other side when turned)
+    const poleAxis = (side) => { const pts = []; for (let j = 0; j <= 16; j++) { const q = j / 16; pts.push(screen(toWorld(kappa ? bendPt(0.04, Y0 + (l - Y0) * q, side * (0.035 + (WZ - 0.035) * q)) : [rx + (0.04 - rx) * q, ry + (l - ry) * q, side * (0.035 + (WZ - 0.035) * q)]))); } return pts; };
+    const push = game.mode === 'wire' && game.out ? clamp(-game.out.tension / 60, 0, 1) : 0;   // on the wire, pushing poles (the lifted gait) bow up, away from the ground, by the pole load: she drives them into the wire
+    const stroke = (pts, col, w, dash) => { ctx.beginPath(); ctx.setLineDash(dash || []); pts.forEach((p, j) => (j ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); ctx.setLineDash([]); ctx.lineCap = 'butt'; };
+    const bow = (pts) => { if (!push || kappa) return pts; const a = pts[0], b = pts[16], nx = -(b[1] - a[1]), ny = b[0] - a[0], n = Math.hypot(nx, ny) || 1, sag = 0.3 * (l - Y0) * push * S * (ny > 0 ? -1 : 1); return pts.map((p, j) => { const q = j / 16, k = 4 * q * (1 - q) * sag; return [p[0] + (nx / n) * k, p[1] + (ny / n) * k]; }); };
+    const pw = Math.max(2.4, 0.075 * S), tipR = Math.max(3, 0.1 * S);
+    const pole = (side) => { const pts = bow(poleAxis(side)), dim = side < 0; stroke(pts, dim ? mix('pole', 0.3) : C.pole, pw); stroke(pts, dim ? mix('rust', 0.3) : C.rust, pw, [0.05 * S, 0.3 * S]);
+      const t = pts[16]; ctx.fillStyle = dim ? mix('copper', 0.3) : C.copper; ctx.beginPath(); ctx.arc(t[0], t[1], tipR, 0, 7); ctx.fill();
+      if (game.mode === 'wire') { ctx.strokeStyle = C.amber; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(t[0], t[1], Math.max(5, 0.17 * S), 0, 7); ctx.stroke(); } };
+    pole(-1);
     // air piling up against her while she flares
     const [vx, vy] = game.velocity(), sp = Math.hypot(vx, vy) || 1, ux = vx / sp, uy = vy / sp;
     if (flare > 0.05) {
-      ctx.strokeStyle = C.cream; ctx.lineWidth = 1.2; ctx.globalAlpha *= 0.55 * flare;
+      ctx.strokeStyle = C.cream; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.55 * flare;
       for (let k = -2; k <= 2; k++) { const bx = hx + Math.cos(tail) * (0.4 + 0.12 * k) - uy * 0.13 * k, by = hy + Math.sin(tail) * (0.4 + 0.12 * k) + ux * 0.13 * k; ctx.beginPath(); ctx.moveTo(X(bx + ux * 0.25), Y(by + uy * 0.25)); ctx.lineTo(X(bx + ux * 0.95), Y(by + uy * 0.95)); ctx.stroke(); }
-      ctx.globalAlpha = ghost ? 0.35 : 1;
+      ctx.globalAlpha = 1;
     }
-    // body: narrow is deep (thick in side view), spread is a thin wing, broad when flared
-    const wB = Math.max(5, S * (spread ? 0.17 : 0.27)) * (1 + 0.45 * flare), n = 12, pts = [];
-    if (bodyPts) pts.push(...bodyPts); else for (let j = 0; j <= n; j++) pts.push([hx + (Math.cos(tail) * LB * j) / n, hy + (Math.sin(tail) * LB * j) / n]);
-    for (let j = 0; j < n; j++) { ctx.beginPath(); ctx.moveTo(X(pts[j][0]), Y(pts[j][1])); ctx.lineTo(X(pts[j + 1][0]), Y(pts[j + 1][1])); ctx.strokeStyle = C.violet; ctx.lineWidth = j < 7 ? wB : wB * (1 - (0.72 * (j - 6)) / 6); ctx.lineCap = 'round'; ctx.stroke(); }
-    ctx.lineCap = 'butt';
-    const [ex, ey] = pts[n], end = Math.atan2(ey - pts[n - 1][1], ex - pts[n - 1][0]), f = 0.2; ctx.fillStyle = C.violet; ctx.beginPath(); ctx.moveTo(X(ex), Y(ey));
-    ctx.lineTo(X(ex + Math.cos(end + 0.75) * f), Y(ey + Math.sin(end + 0.75) * f)); ctx.lineTo(X(ex + Math.cos(end - 0.75) * f), Y(ey + Math.sin(end - 0.75) * f)); ctx.fill();
-    // scarf, head, the one eye
-    const n1 = pts[1]; ctx.beginPath(); ctx.moveTo(X(n1[0]), Y(n1[1])); ctx.lineTo(X(n1[0] - ux * 0.5), Y(n1[1] - uy * 0.5)); ctx.strokeStyle = C.rust; ctx.lineWidth = Math.max(2, 0.07 * S); ctx.lineCap = 'round'; ctx.stroke(); ctx.lineCap = 'butt';
-    ctx.fillStyle = C.rust; ctx.beginPath(); ctx.arc(X(n1[0]), Y(n1[1]), wB * 0.55, 0, 7); ctx.fill();
-    const hr = Math.max(4.5, 0.15 * S), fx = -Math.cos(tail), fy = -Math.sin(tail);
-    ctx.fillStyle = C.cream; ctx.strokeStyle = C.violet; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(X(hX), Y(hY), hr, 0, 7); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = C.amber; ctx.beginPath(); ctx.arc(X(hX) + fx * hr * 0.3, Y(hY) - fy * hr * 0.3, hr * 0.5, 0, 7); ctx.fill();
-    ctx.fillStyle = C.pole; ctx.beginPath(); ctx.arc(X(hX) + fx * hr * 0.42, Y(hY) - fy * hr * 0.42, hr * 0.22, 0, 7); ctx.fill();
-    ctx.globalAlpha = 1;
+    // the scarf's streamer, under her solids: from the knot, down the wind, fluttering more the faster the air (the level's wind counts)
+    const knot = screen(toWorld(ari.turned ? bendPt(0.02, 0.02, -0.1) : bendPt(-0.02, 0.02, 0.1))), wind = sp + ((game.level && game.level.wind) || 0);
+    const amp = 0.06 * clamp((wind - 5) / 20, 0, 1), freq = Math.min(2 + 0.3 * wind, 9), ph = now * freq * 2 * Math.PI, wx = -ux, wy = -uy, nx = -wy, ny = wx, path = [];
+    for (let j = 0; j <= 10; j++) { const q = j / 10, wob = amp * q * Math.sin(ph - q * 2.2); path.push([knot[0] + (wx * 0.5 * q + nx * wob) * S, knot[1] - (wy * 0.5 * q + ny * wob) * S]); }
+    stroke(path, C.rust, Math.max(2, 0.07 * S));
+    // her solids: cull against the viewer, sort by depth with the part biases, fill flat with the lit tone of the part's token
+    const drawn = [];
+    for (const f of faces) {
+      if (f.part === 'streamer' || f.part === 'poles' || f.part === 'tips') continue;        // the streamer is a stroke below, fluttering; the poles and tips are the strokes above
+      const w = f.pts.map(toWorld), e1 = [w[1][0] - w[0][0], w[1][1] - w[0][1], w[1][2] - w[0][2]], e2 = [w[2][0] - w[0][0], w[2][1] - w[0][1], w[2][2] - w[0][2]];
+      const n = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]], nn = Math.hypot(n[0], n[1], n[2]) || 1;
+      if ((n[0] * TO_VIEWER[0] + n[1] * TO_VIEWER[1] + n[2] * TO_VIEWER[2]) / nn <= 0) continue;
+      const lit = (n[0] * LIGHT[0] + n[1] * LIGHT[1] + n[2] * LIGHT[2]) / nn, tone = 0.35 * lit - 0.12 + (f.material === 'white' ? 0.3 : 0);
+      let d = 0; for (const p of f.pts) d += p[2]; d = d / f.pts.length + (BIAS[f.part] || 0);
+      drawn.push({ d, poly: w.map(screen), col: mix(f.material === 'white' ? 'cream' : f.material, tone), seam: !!pair });
+    }
+    drawn.sort((a, b) => a.d - b.d);
+    for (const f of drawn) { ctx.beginPath(); f.poly.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]))); ctx.closePath(); ctx.fillStyle = f.col; ctx.fill(); if (f.seam) { ctx.strokeStyle = f.col; ctx.lineWidth = 0.5; ctx.stroke(); } }   // a skin's many small triangles: the stroke hides the anti-aliasing seams between them
+    pole(1);
   }
 
-  // The arc between her and the wire: a copper arc burns white at the core with a green-blue fringe, and drops orange sparks.
+  // The arc between her and the wire: a copper arc burns white at the core with a green-blue fringe, and drops orange sparks. It burns at the near wire.
   function drawArc(game) {
     const [hx, hy] = game.head(), left = game.arcUntil - game.t, life = clamp(left / 0.4, 0, 1);
-    const wx = hx - clamp(hy, -1, 1) * 0.3, n = 9, seed = Math.floor(game.t * 40);
+    const wx = hx - clamp(hy, -1, 1) * 0.3, n = 9, seed = Math.floor(game.t * 40), WX = Xz(wx, WZ), WY = Yz(0, WZ);
     const jag = (k, s) => Math.sin(seed * 12.9898 + k * 78.233 + s * 37.7) * 43758.5453 % 1;
-    const path = (s, amp) => { ctx.beginPath(); ctx.moveTo(X(hx), Y(hy)); for (let k = 1; k < n; k++) { const q = k / n; ctx.lineTo(X(hx + (wx - hx) * q) + jag(k, s) * amp, Y(hy * (1 - q)) + jag(k + 50, s) * amp * 0.6); } ctx.lineTo(X(wx), Y(0)); };
+    const path = (s, amp) => { ctx.beginPath(); ctx.moveTo(X(hx), Y(hy)); for (let k = 1; k < n; k++) { const q = k / n; ctx.lineTo(X(hx) + (WX - X(hx)) * q + jag(k, s) * amp, Y(hy) + (WY - Y(hy)) * q + jag(k + 50, s) * amp * 0.6); } ctx.lineTo(WX, WY); };
     ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.globalAlpha = 0.35 + 0.65 * life;
     path(1, 0.22 * S); ctx.strokeStyle = '#5FE3C0'; ctx.lineWidth = Math.max(4, 0.12 * S); ctx.shadowColor = '#5FE3C0'; ctx.shadowBlur = 18; ctx.stroke();
     path(2, 0.12 * S); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = Math.max(1.6, 0.04 * S); ctx.shadowBlur = 6; ctx.stroke();
     ctx.shadowBlur = 0; ctx.fillStyle = '#FFB066';
-    for (let k = 0; k < 7; k++) { const a = jag(k, 9), b = Math.abs(jag(k, 11)); ctx.beginPath(); ctx.arc(X(wx) + a * 0.5 * S, Y(0) + b * 0.9 * S, Math.max(1.2, 0.025 * S), 0, 7); ctx.fill(); }
-    ctx.beginPath(); ctx.arc(X(wx), Y(0), Math.max(4, 0.13 * S), 0, 7); ctx.fillStyle = '#FFFFFF'; ctx.shadowColor = '#5FE3C0'; ctx.shadowBlur = 22; ctx.fill();
+    for (let k = 0; k < 7; k++) { const a = jag(k, 9), b = Math.abs(jag(k, 11)); ctx.beginPath(); ctx.arc(WX + a * 0.5 * S, WY + b * 0.9 * S, Math.max(1.2, 0.025 * S), 0, 7); ctx.fill(); }
+    ctx.beginPath(); ctx.arc(WX, WY, Math.max(4, 0.13 * S), 0, 7); ctx.fillStyle = '#FFFFFF'; ctx.shadowColor = '#5FE3C0'; ctx.shadowBlur = 22; ctx.fill();
     ctx.restore();
   }
 
@@ -752,16 +1056,18 @@ function makeRenderer(canvas, world, physics) {
 
   readTokens(); resize();
   return {
-    resize, readTokens,
-    draw(game, cmdIn, tuning = {}, marks = []) {
+    resize, readTokens, ari, setModel,
+    /** marks: a demo's key moments; paused: the page is holding (a demo held at a moment makes her glance at the player). */
+    draw(game, cmdIn, tuning = {}, marks = [], paused = false) {
+      ari.now = clock();
       const cmd = game.arcing() ? { ...cmdIn, spread: false } : cmdIn;
       const [hx, hy] = game.head(), [vx] = game.velocity();
       const wantH = Math.max(11.6, WIRE_H + hy + 3.5);              // widen when she climbs
       viewH += (wantH - viewH) * 0.08; S = H / viewH;
       const lead = clamp(vx * 0.35, 2, 10); camX += (hx + lead - camX) * 0.15;
-      ctx.clearRect(0, 0, W, H); drawWorld(game); if (game.arcing()) drawArc(game); drawAri(game, cmd, false);
-      if (game.spark && game.t < game.spark.until) {                  // the cross-span spark: a white core, a blue fringe, a few orange sparks
-        const px = X(game.spark.x), py = Y(game.spark.y), life = (game.spark.until - game.t) / 0.15;
+      ctx.clearRect(0, 0, W, H); drawWorld(game); if (game.arcing()) drawArc(game); drawAri(game, cmd, paused, marks);
+      if (game.spark && game.t < game.spark.until) {                  // the cross-span spark on the wire that was hit: a white core, a blue fringe, a few orange sparks
+        const sz = game.spark.z ?? WZ, px = Xz(game.spark.x, sz), py = Yz(game.spark.y, sz), life = (game.spark.until - game.t) / 0.15;
         ctx.save(); ctx.globalAlpha = Math.max(0, life); ctx.fillStyle = '#FFFFFF'; ctx.shadowColor = '#7FB8FF'; ctx.shadowBlur = 24; ctx.beginPath(); ctx.arc(px, py, Math.max(5, 0.12 * S), 0, 7); ctx.fill();
         ctx.shadowBlur = 0; ctx.fillStyle = '#FFB066'; for (let i = 0; i < 9; i++) { const a = i * 0.7 + game.spark.until * 13, r = (1 - life) * 0.8 * S + 6; ctx.beginPath(); ctx.arc(px + Math.cos(a) * r, py + Math.sin(a) * r * 0.7, 2, 0, 7); ctx.fill(); }
         ctx.restore();
@@ -774,6 +1080,9 @@ function makeRenderer(canvas, world, physics) {
       const bx = W - 16 - 5 * S, by = H - 14; line(bx, by, bx + 5 * S, by, C.ink, 2); ctx.fillStyle = C.ink; ctx.font = '11px ui-monospace, monospace'; ctx.textAlign = 'center'; ctx.fillText('5 m', bx + 2.5 * S, by - 6);
     },
     snap(game) { camX = game.head()[0] + 6; },
+    /** For tests and the harness: where a model-frame point lands on screen for her current pose (no curl shift). */
+    project(game, p) { const [hx, hy] = game.head(), pa = poleDir(game), px = Math.cos(pa), py = Math.sin(pa); return [Xz(hx + p[0] * py + p[1] * px, p[2]), Yz(hy - p[0] * px + p[1] * py, p[2])]; },
+    wireY: (z) => Yz(0, z), scale: () => S,
   };
 }
 
@@ -1530,6 +1839,10 @@ function boot(data, doc) {
   let crossOn = /[#&]crossspan/.test(location.hash);
   let game, cmds, clock, renderer, keys = {}, paused = false, busOn = !/[#&]nobus/.test(location.hash), lifted = /[#&]lifted/.test(location.hash), assist = null,
       scale = +(/[#&]speed=([\d.]+)/.exec(location.hash) || [0, level.input.time_scale ?? 1])[1], watch = /[#&]watch/.test(location.hash), last = performance.now(), cmd;
+  // ---- her model: the paper page carries several (data.models: the recipe levels and the skinned ones, change ari-skin); #model=<key> picks one
+  let modelKey = (/[#&]model=([\w-]+)/.exec(location.hash) || [])[1];
+  if (!data.models || !(modelKey in data.models)) modelKey = data.page && data.page.defaultModel;
+  const herModel = () => (data.models && data.models[modelKey]) || data.model;
   // ---- a demo (#demo=<id>): a candidate of demos.js played by its plan, with its key moments numbered (tasks 12.1, 11.3)
   const demoId = (/[#&]demo=(\w+)/.exec(location.hash) || [])[1] || (data.page && data.page.defaultDemo), demo = demoId && data.demos && data.demos[demoId] && demos[demoId] ? { ...data.demos[demoId], plan: demos[demoId].plan, done: demos[demoId].done, setup: demos[demoId].setup } : null;
   let demoState = freshState(), stopAtMoments = false, moment = -1, seeking = false, demoStep = 0, demoKi = 0;
@@ -1616,7 +1929,7 @@ function boot(data, doc) {
     demoState = freshState(); if (!seeking) { moment = -1; paused = false; } drawMoments();
     game.world.setBus(busOn, 0);
     demoStep = 0; demoKi = 0; if (demo && demo.setup) demo.setup(game);
-    renderer = makeRenderer($('cv'), game.world, data.physics); renderer.snap(game);
+    renderer = makeRenderer($('cv'), game.world, data.physics, herModel()); renderer.snap(game);
     $('result').hidden = true; keys = {};
   }
   function readout() {
@@ -1651,7 +1964,7 @@ function boot(data, doc) {
         if (demo.done && demo.done(game, demoState)) paused = true;                          // a demo with an end (the cross-span runs) stops there
         const next = moments.findIndex((k) => k.t > game.t - dt - 1e-9 && k.t <= game.t + 1e-9); if (next >= 0) { moment = next; if (stopAtMoments) paused = true; drawMoments(); } }
     });
-    renderer.draw(game, game.shown || cmd, level.tuning, demo ? marks() : []); readout();
+    renderer.draw(game, game.shown || cmd, level.tuning, demo ? marks() : [], paused); readout();
     if (sound) { if (paused || game.over) sound.mute(); else sound.update(game);
       const st = sound.status, bs = sound.busStatus; $('soundStatus').textContent = `${st.playing}: her tips hum ${st.hz.toFixed(0)} Hz at ${(20 * Math.log10(Math.max(1e-4, st.gain))).toFixed(0)} dB; the trolleybus ${bs.playing === 'silent' ? 'off' : `hums ${bs.hz.toFixed(0)} Hz`}`; }
     if (game.over && $('result').hidden) {
@@ -1689,7 +2002,12 @@ function boot(data, doc) {
     const apply = () => { setSound(sel.value); try { localStorage.setItem('roping-sound', JSON.stringify({ variant: sel.value })); } catch (e) { /* session only */ } };
     sel.addEventListener('change', apply);
     if (sel.value !== 'off') doc.addEventListener('pointerdown', apply, { once: true }); }
-  if (data.page) { doc.title = data.page.title; const h = $('demoList').querySelector('.padhead'); h.children[0].textContent = data.page.listTitle; h.children[1].textContent = data.page.listLine; }
+  if (data.page) doc.title = data.page.title;
+  if (data.page && data.page.lede && !demo) { $('title').textContent = data.page.heading || data.page.title; $('lede').innerHTML = data.page.lede; }   // a page of its own (the paper page), pointing back at the original
+  if (data.page && data.page.listTitle) { const h = $('demoList').querySelector('.padhead'); h.children[0].textContent = data.page.listTitle; h.children[1].textContent = data.page.listLine; }
+  if (data.models && Object.keys(data.models).length > 1) { $('modelBox').hidden = false;           // the selector, only where there is a choice
+    const pick = (k) => { modelKey = k; renderer.setModel(herModel()); for (const b of $('models').children) b.className = b.dataset.k === k ? 'on' : ''; };
+    $('models').replaceChildren(...Object.keys(data.models).map((k) => { const b = doc.createElement('button'); b.dataset.k = k; b.innerHTML = `<b>${k}</b>`; b.className = k === modelKey ? 'on' : ''; b.addEventListener('click', () => pick(k)); return b; })); }
   if (data.demos && Object.keys(data.demos).length) { $('demoList').hidden = false;
     $('demoLinks').replaceChildren(...Object.entries(data.demos).map(([id, d]) => { const a = doc.createElement('a'); a.href = `#demo=${id}`; a.textContent = `${d.title}`; a.title = d.what; a.className = d.closes ? 'closes' : 'open'; return a; }));
     window.addEventListener('hashchange', () => location.reload()); }                     // a demo link changes the hash; the page is rebuilt from it
@@ -1697,9 +2015,9 @@ function boot(data, doc) {
   const at = /[#&]t=([\d.]+)/.exec(location.hash);          // #watch&t=3.3 : the autopilot's run, held at that moment (a still mode)
   if (at) { for (let i = 0; i < +at[1] / dt && !game.over; i++) { cmd = cmds.update(autopilots.brakePullHoop(game), dt); game.step(cmd, dt); } if (/[#&]arc/.test(location.hash)) game.arcUntil = game.t + 2.5;
     if (/[#&]hoop/.test(location.hash) && game.fl) { game.fl.l = 1.0; game.fl.curl = 1; }   // a still of the hoop   // a still of the arc, for checking the drawing
-    paused = true; renderer.snap(game); for (let i = 0; i < 60; i++) renderer.draw(game, game.shown || cmd, level.tuning); }
+    paused = true; renderer.snap(game); for (let i = 0; i < 60; i++) renderer.draw(game, game.shown || cmd, level.tuning, [], true); }
   requestAnimationFrame(frame);
-  return { game: () => game, paused: () => paused, scale: () => scale };           // for the page smoke test
+  return { game: () => game, paused: () => paused, scale: () => scale, renderer: () => renderer };           // for the page smoke test
 }
 
 boot(DATA, document);
