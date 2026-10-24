@@ -5,7 +5,9 @@ Ari rides trolleybus wires on two long poles and ropes over the trolleybuses in 
 
 - `index.html` landing page
 - `game.html` the game (keyboard)
-- `at-speed.html`, `gaits.html`, `first-version.html` the sketches
+- `paper-ari.html` the game with Ari drawn other ways; `cross-span.html` its cross-span demos; `game-kinematic.html` the kept
+  kinematic-tips build
+- `at-speed.html`, `first-version.html` the sketches
 
 ## Licence
 
