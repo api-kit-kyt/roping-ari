@@ -12,5 +12,5 @@ Ari rides trolleybus wires on two long poles and ropes over the trolleybuses in 
 ## Licence
 
 These pages: **CC BY-SA 4.0** (text in `LICENSE`). The game's code inside them: **GPL-3.0-or-later**.
-Sources, both licence texts and the attribution text: <https://github.com/Sashkow/ari-roping>.
+Sources, both licence texts and the attribution text: <https://github.com/api-kit-kyt/ari-roping>.
 Copyright (c) 2026 Oleksandr Lykhenko (Sashkow). The character Ari, her name and visual idea, by Ira Shostak; the character is not licensed by these pages (all rights reserved, used here with permission), only the pages are.
