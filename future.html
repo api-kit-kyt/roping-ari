@@ -1,0 +1,58 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 (this page's text). The character Ari is not licensed: all rights reserved, used with permission. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ari, One Day</title>
+<meta name="description" content="How Ari, the trolleybus-wire creature, might look one day: pictures and 3D models.">
+<style>
+  :root { --ground: #F1EDF4; --panel: #FBF9FC; --ink: #2B2335; --muted: #6B6078; --line: #D9D0E2; --violet: #6F5B93; --rust: #B4472A; }
+  @media (prefers-color-scheme: dark) { :root { --ground: #17131D; --panel: #201A29; --ink: #ECE6F2; --muted: #A598B5; --line: #372E44; --violet: #A995D1; --rust: #E5825C; } }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin-inline: auto; padding-inline: 16px; padding-block: 48px 64px; display: grid; gap: 28px; }
+  h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.05; margin: 0 0 10px; letter-spacing: -0.01em; }
+  h2 { font-size: 22px; margin: 12px 0 0; }
+  .lede { margin: 0; color: var(--muted); max-width: 66ch; }
+  figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { padding: 10px 14px 12px; color: var(--muted); font-size: 15px; }
+  figcaption b { color: var(--ink); font-weight: 600; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); }
+  a { color: var(--violet); }
+  .play { color: var(--rust); font-weight: 600; }
+  footer { color: var(--muted); font-size: 14px; max-width: 72ch; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Ari, one day</h1>
+    <p class="lede">Ari is a city's spirit animal: part cat, part seal, with a whale's tail, whose horns grew over a century into trolleybus poles. She rides the trolleybus wires and wants to be like a trolleybus. These pictures are how we imagine her. One day we hope she could be built for real, and pass along the trolleybus lines doing acrobatics with her horns. Until then she lives in <a class="play" href="game.html">a small game</a>, where her ride on the wires is simulated.</p>
+  </header>
+
+  <h2>On the wires</h2>
+  <div class="grid">
+    <figure><img src="future/wires-arc.jpg" alt="Ari arched over two trolleybus wires at dusk above a city by a river, sparks at her pole tips" loading="lazy"><figcaption><b>Acrobatics.</b> Arched over the wires at dusk, sparks where her pole tips hold the line.</figcaption></figure>
+    <figure><img src="future/wires-sunset.jpg" alt="Ari gliding along trolleybus wires at sunset with a trolleybus below; four smaller views of her" loading="lazy"><figcaption><b>The ride.</b> Gliding on the wires above a trolleybus at sunset, with her face, a hang and a rest.</figcaption></figure>
+    <figure><img src="future/bridge-sail.jpg" alt="Ari leaping from the top of a cable-stayed bridge pylon above fog" loading="lazy"><figcaption><b>Off the bridge.</b> A leap from a pylon of Kyiv's Pivnichnyi bridge above the morning fog.</figcaption></figure>
+  </div>
+
+  <h2>In the city</h2>
+  <div class="grid">
+    <figure><img src="future/at-the-stop.jpg" alt="Ari at a rainy trolleybus stop, a person reaching a hand towards her" loading="lazy"><figcaption><b>At the stop.</b> Someone offers a hand on a rainy evening; she listens.</figcaption></figure>
+    <figure><img src="future/becomes-a-trolleybus.jpg" alt="Ari as a glowing trolleybus with windows along her body, at night" loading="lazy"><figcaption><b>Becoming a trolleybus.</b> What she wants most, glowing at a night stop.</figcaption></figure>
+    <figure><img src="future/farm-in-the-sky.jpg" alt="Ari carried by balloons under a winged frame high above the clouds" loading="lazy"><figcaption><b>Higher.</b> Under balloons and a sail, above the clouds.</figcaption></figure>
+    <figure><img src="future/statue.jpg" alt="A large painted sculpture of Ari in flight on two pillars in a snowy park" loading="lazy"><figcaption><b>As a sculpture.</b> A full-size Ari in flight, in winter in Pripyat.</figcaption></figure>
+  </div>
+
+  <h2>As 3D models</h2>
+  <div class="grid">
+    <figure><img src="future/mesh-lowpoly-2000.jpg" alt="A low-poly 3D model of Ari sitting, from three angles" loading="lazy"><figcaption><b>Low-poly Ari,</b> 2000 faces, sitting: the model the game can draw.</figcaption></figure>
+    <figure><img src="future/mesh-rigged.jpg" alt="A rigged 3D model of Ari flying and hanging from her poles, from five angles each" loading="lazy"><figcaption><b>Rigged Ari,</b> flying and hanging from her poles, from five angles: a mesh that can move.</figcaption></figure>
+  </div>
+
+  <footer>The scenes were generated with image models from the reference sheets; the 3D models were made from them with image-to-3D tools and Blender. None of this is a built object yet.<br>The character Ari, her name and her look, was first imagined and drawn by Ira Shostak; story by Oleksandr Lykhenko. The character is not under any open licence (all rights reserved, used here with permission). <a href="index.html">Roping Ari</a> · <a href="game.html">the game</a></footer>
+</main>
+</body>
+</html>
